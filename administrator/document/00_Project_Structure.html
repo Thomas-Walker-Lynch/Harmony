@@ -4,14 +4,18 @@
     <meta charset="UTF-8">
     <title>Project Structure and Ontology</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap" rel="stylesheet">
-    <script src="../../style/body_visibility_hidden.js"></script>
+    <script src="setup.js"></script>
     <script> window.StyleRT.body_visibility_hidden(); </script>
+    <script>
+      window.StyleRT.include('RT/theme');
+      window.StyleRT.include('RT/layout/article_tech_ref');
+    </script>
   </head>
   <body>
     <RT-article>
       <RT-title 
         author="Harmony Project Team" 
-        date="2026-03-05" 
+        date="2026-03-06" 
         title="Project Structure and Ontology">
       </RT-title>
 
@@ -82,7 +86,6 @@
         <li><RT-code>tool/</RT-code> — Developer-specific tools (like the <RT-code>release</RT-code> and <RT-code>make</RT-code> scripts).</li>
       </ul>
 
-      <script src="../../style/style_orchestrator.js"></script>
     </RT-article>
   </body>
 </html>

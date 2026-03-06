@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup the project and role environment
+# setup - enter a project role environment
 # (must be sourced)
 
 script_afp=$(realpath "${BASH_SOURCE[0]}")
@@ -8,9 +8,11 @@ if [ "${BASH_SOURCE[0]}" == "${0}" ]; then
   exit 1
 fi
 
+project_roles="administrator consumer developer tester"
+
 print_usage(){
   echo "usage: . setup <role>"
-  echo "known roles: administrator, developer, tester, user"
+  echo "known roles: ${project_roles}"
 }
 
 if [ -z "${1:-}" ] || [ "${1}" == "-h" ] || [ "${1}" == "--help" ]; then
@@ -19,7 +21,7 @@ if [ -z "${1:-}" ] || [ "${1}" == "-h" ] || [ "${1}" == "--help" ]; then
 fi
 
 role_is_valid=false
-for r in administrator developer tester user; do
+for r in ${project_roles}; do
   if [ "${1}" == "${r}" ]; then
     role_is_valid=true
     break
