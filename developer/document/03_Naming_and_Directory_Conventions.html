@@ -42,6 +42,15 @@
       </p>
 
       <p>
+        Hence, with the default makefile for C, compiler fodder is found in the <RT-code>authored/</RT-code> directory. File name extensions are used to signal to the build tools how the file is to be processed:
+      </p>
+      <ul>
+        <li><RT-code>.cli.c</RT-code> : Fodder made into a stand-alone executable.</li>
+        <li><RT-code>.lib.c</RT-code> : Library code source, compiled as an object file and added to the project archive.</li>
+        <li><RT-code>.mod.c</RT-code> : Kernel module sources.</li>
+      </ul>
+
+      <p>
         The RT C coding environment does not use separate source and header files. Instead, a variable is set that gates off the implementation if the source code is to be used as a header. Hence, all of our C source fits fine within an <RT-code>authored</RT-code> directory.
       </p>
     </RT-article>

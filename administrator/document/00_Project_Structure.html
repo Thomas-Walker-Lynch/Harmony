@@ -33,8 +33,40 @@
         <li>A safe, predictable build and release workflow.</li>
       </ol>
 
-      <h1>Key Concepts</h1>
-      <h2>Created vs. Made</h2>
+      <h1>Setup</h1>
+
+      <p>
+        Python programmers speak of <RT-term>virtual environment</RT-term>  and <RT-term>activate</RT-term>.  In contrast, <RT-term>Harmony</RT-term> users speak of <RT-term>roles</RT-term> and <RT-term>setup</RT-term>.  Whatever the terminology, this is about setting up the environment by giving values to environment  variables. In Python there is one set of environment variable values independent of user role.  With Harmony there is a different set of variables depending on the role the user is taking on.
+       </p>
+
+      <p>
+        A person takes on a role by sourcing the top-level setup script and providing the target role. In a bash shell to take on the role of <RT-term>developer</RT-term>  the command is: <RT-code>. setup developer</RT-code>,  or <RT-code>source setup developer</RT-code>. As of this writing, the supported roles are: <strong>administrator</strong>, <strong>consumer</strong>, <strong>developer</strong>, and <strong>tester</strong>.
+      </p>
+
+      <p>
+        Behind the scenes, the <RT-code>setup</RT-code> script performs the following actions:
+      </p>
+
+      <ul>
+        <li>Sources the project-wide setup (<RT-code>shared/authored/setup</RT-code>) to establish the core environment variables (e.g., <RT-code>REPO_HOME</RT-code> and <RT-code>PROJECT</RT-code>).</li>
+        <li>Configures the <RT-code>PATH</RT-code> to include shared tools, library environments, and the specific <RT-code>&lt;role&gt;/tool</RT-code> directory.</li>
+        <li>Changes the working directory into the specified role's workspace.</li>
+        <li>Sources the <RT-code>&lt;role&gt;/tool/setup</RT-code> script. While the earlier steps apply the standard Harmony skeleton setup, this final step applies the role setup that is customized for this specific project.</li>
+      </ul>
+
+
+      <h1>Documentation</h1>
+      <p>Documentation is placed closest to the role it pertains to.</p>
+      <ul>
+        <li><RT-code>consumer/release/document/</RT-code> : Documentation for end-users of released code (e.g., man pages, application manuals, library API references).</li>
+        <li><RT-code>administrator/document/</RT-code> : Project-wide documentation covering structure, ontology, and workflow.</li>
+        <li><RT-code>developer/document/</RT-code> : Documentation for developers, including coding standards and internal API guides.</li>
+        <li><RT-code>tester/document/</RT-code> : Documentation for testers detailing test plans and tools.</li>
+        <li><RT-code>shared/document/</RT-code> : Documentation on installing and configuring shared tools.</li>
+      </ul>
+
+      <h1>Key concepts</h1>
+      <h2>Authored vs. Made</h2>
       <p>
         Harmony divides the world into two categories:
       </p>
@@ -46,43 +78,158 @@
         This separation protects authored material from accidental overwrite and makes build artifacts fully disposable.
       </p>
 
-      <h2>Semantic Paths</h2>
-      <p>
-        Directory names in Harmony are not decorative. Each directory name is a <RT-term>property</RT-term> shared among files. A full path forms a semantic sentence describing those files.
-      </p>
-
-      <h1>Top-Level Repository Layout</h1>
+      <h1>Top-Level repository layout</h1>
       <p>
         A team member will source the project setup file to take on a role. As of this writing, the supported roles are: <RT-code>administrator</RT-code>, <RT-code>developer</RT-code>, <RT-code>tester</RT-code>, and <RT-code>consumer</RT-code>.
       </p>
 
       <ul>
-        <li><RT-code>administrator/</RT-code> — Project-local tools and skeleton maintenance.</li>
-        <li><RT-code>developer/</RT-code> — Primary workspace for developers.</li>
-        <li><RT-code>tester/</RT-code> — Regression and validation workspace for testers.</li>
-        <li><RT-code>consumer/</RT-code> — Consumption workspace holding the <RT-code>release</RT-code> directory.</li>
-        <li><RT-code>shared/</RT-code> — Shared ecosystem tools and global environments.</li>
+        <li><RT-code>administrator/</RT-code> : Project-local tools and skeleton maintenance.</li>
+        <li><RT-code>developer/</RT-code> : Primary workspace for developers.</li>
+        <li><RT-code>tester/</RT-code> : Regression and validation workspace for testers.</li>
+        <li><RT-code>consumer/</RT-code> : Consumption workspace holding the <RT-code>consumer/release</RT-code> directory.</li>
+        <li><RT-code>shared/</RT-code> : Shared ecosystem tools and global environments.</li>
       </ul>
 
-      <h1>The Consumer Tree</h1>
+      <h1>The administrator work area</h1>
       <p>
-        The <RT-code>consumer/release/</RT-code> tree is where developers put work product that is ready to be consumed. The entire <RT-code>consumer/release</RT-code> directory is git-ignored and treated as a transient deployment target.
-      </p>
-      <p>
-        Artifacts arrive in the <RT-code>release/</RT-code> tree <em>only</em> when the developer invokes the <RT-code>release</RT-code> script, which performs a flat-copy from the developer's <RT-code>scratchpad/stage</RT-code> directory.
+        This directory holds the tools and documentation used to manage the project as a whole. It includes the HTML documentation for the project ontology and workflow, as well as project-local tools utilized by the administrator to maintain the Harmony skeleton.
       </p>
 
-      <h1>The Developer Tree</h1>
+      <h1>The developer work area</h1>
       <p>
         This directory is entered by first going to the top-level directory of the project, then sourcing <RT-code>. setup developer</RT-code>.
       </p>
       <ul>
-        <li><RT-code>authored/</RT-code> — Human-written source. Tracked by Git.</li>
-        <li><RT-code>made/</RT-code> — Tracked artifacts generated by tools (e.g., links to CLI entry points).</li>
-        <li><RT-code>experiment/</RT-code> — Try-it-here code. Short-lived spot testing.</li>
-        <li><RT-code>scratchpad/</RT-code> — Git-ignored directory. Holds all intermediate build outputs, including the <RT-code>stage</RT-code> directory for releases.</li>
-        <li><RT-code>tool/</RT-code> — Developer-specific tools (like the <RT-code>release</RT-code> and <RT-code>make</RT-code> scripts).</li>
+        <li><RT-code>authored/</RT-code> : Human-written source. Tracked by Git.</li>
+        <li><RT-code>made/</RT-code> : Tracked artifacts generated by tools (e.g., links to CLI entry points).</li>
+        <li><RT-code>experiment/</RT-code> : Try-it-here code. Short-lived spot testing.</li>
+        <li><RT-code>scratchpad/</RT-code> : Git-ignored directory. Holds all intermediate build outputs, including the <RT-code>stage</RT-code> directory for releases.</li>
+        <li><RT-code>tool/</RT-code> : Developer-specific tools (like the release and make scripts).</li>
       </ul>
+
+      <h1>The tester work area</h1>
+      <p>
+        This directory is dedicated to formal testing, including regression suites. While a developer can run and keep informal spot tests in their <RT-code>experiment/</RT-code> directory, any experiment promoted to a formal test is moved here. This enforces the boundary between writing code and validating it.
+      </p>
+
+      <h1>The shared tree</h1>
+      <p>
+        This directory contains ecosystem tools and global environments available to all roles. This includes shared authored tools, as well as third-party installations (like Python virtual environments or compilers) required by the project.
+      </p>
+
+      <h1>The consumer tree</h1>
+      <p>
+        The <RT-code>consumer/release/</RT-code> tree is where developers put work product that is ready to be consumed. The entire <RT-code>consumer/release</RT-code> directory is git-ignored and treated as a transient deployment target.
+      </p>
+      <p>
+        Artifacts arrive in the <RT-code>consumer/release/</RT-code> tree <em>only</em> when the developer invokes the release script, which performs a flat-copy from the developer's <RT-code>scratchpad/stage</RT-code> directory.
+      </p>
+
+      <h1>Releases</h1>
+      <p>
+        While the workflow document provides a deep dive, it is helpful to understand how directories relate to the concept of a release. There is a distinction between a developer release and a project release.
+      </p>
+      <ul>
+        <li><strong>Developer Release:</strong> A developer releases when they determine a work product is ready for testing. They invoke a script to copy artifacts into the <RT-code>consumer/release/</RT-code> directory.</li>
+        <li><strong>Project Release:</strong> A project is released when the tester and other team members determine the code in the <RT-code>consumer/release/</RT-code> directory is fully validated and ready for end users. This is enacted by creating a release branch on the version control system (e.g., GitHub), not by moving files to another directory.</li>
+      </ul>
+
+      <h2>Directory names</h2>
+      <p>
+        Each directory name is a <RT-term>property</RT-term> shared among the files contained within it. Hence, a full path forms a semantic sentence describing each file within it.
+      </p>
+      <p>
+        Because a directory name represents a property, it is rarely plural. For example, when each and every file in a directory is a test, the directory is named <RT-code>test</RT-code>.
+      </p>
+      <p>
+        When a property name <em>is</em> plural, it describes something about the internal nature of each file. For instance, a directory named <RT-code>constants</RT-code> implies that each individual file inside it (say, <RT-code>physics.py</RT-code>, <RT-code>math.py</RT-code>, and <RT-code>cosmology.py</RT-code>) provides a collection of multiple constants.
+      </p>
+      <p>
+        The following list presents each property type in order of preference that we use when naming directories.
+      </p>
+      <ul>
+        <li><strong>Role Association</strong> (<RT-code>administrator</RT-code>, <RT-code>developer</RT-code>, <RT-code>tester</RT-code>, <RT-code>consumer</RT-code>): Identifies the persona, whether human or AI, intended to interact with the files.</li>
+        <li><strong>Provenance</strong> (<RT-code>authored</RT-code>, <RT-code>made</RT-code>): Indicates whether the file was created by an intellect or mechanically produced by a tool.</li>
+        <li><strong>Capability</strong> (<RT-code>tool</RT-code>, <RT-code>document</RT-code>, <RT-code>experiment</RT-code>): Describes the primary function or structural nature of the file.</li>
+        <li><strong>Lifecycle State</strong> (<RT-code>scratchpad</RT-code>, <RT-code>release</RT-code>): Denotes the persistence, volatility, or promotion status of the file.</li>
+        <li><strong>Tracking Status</strong> (<RT-code>tracked</RT-code>, <RT-code>untracked</RT-code>): Specifies the version control expectations for the artifacts.</li>
+      </ul>
+
+      <p>
+        In the Unix file system, a person must choose a single string to use as the directory name. Hence, we typically choose a primary property, though when needed, we use multiple property names separated by an underscore.
+      </p>
+
+      <h1>The version 2.2  Harmony directory tree</h1>
+      <RT-code>
+      2026-03-07 10:38:58 Z [Harmony:administrator] Thomas_developer@StanleyPark
+      §/home/Thomas/subu_data/developer/project§
+      > tree Harmony
+      Harmony
+      ├── 0pus_Harmony
+      ├── administrator
+      │   ├── document
+      │   │   ├── 00_Project_Structure.html
+      │   │   ├── 01_Workflow_Build_Contract.html
+      │   │   ├── Harmony.md
+      │   │   └── setup.js
+      │   └── tool
+      │       ├── after_pull
+      │       ├── archive
+      │       ├── release
+      │       └── setup
+      ├── consumer
+      │   ├── scratchpad
+      │   └── tool
+      │       └── env
+      ├── developer
+      │   ├── authored
+      │   │   └── hello.cli.c
+      │   ├── document
+      │   │   ├── 02_RT_Code_Format.html
+      │   │   ├── 03_Naming_and_Directory_Conventions.html
+      │   │   ├── 04_Language_Addenda.html
+      │   │   ├── ontology.org
+      │   │   └── setup.js
+      │   ├── experiment
+      │   ├── made
+      │   ├── scratchpad
+      │   └── tool
+      │       ├── do_all
+      │       ├── make
+      │       ├── makefile
+      │       ├── release
+      │       └── setup
+      ├── LICENSE
+      ├── scratchpad
+      │   └── Harmony__79f9d52__2026-03-07_085628Z.tar
+      ├── setup
+      ├── shared
+      │   ├── authored
+      │   │   ├── scratchpad
+      │   │   ├── setup
+      │   │   ├── style
+      │   │   └── version
+      │   ├── document
+      │   │   ├── install_generic.org
+      │   │   ├── install_Python.org
+      │   │   └── setup.js
+      │   ├── made
+      │   ├── style_directory_dict.js
+      │   └── third_party
+      │       ├── RT-style-JS_public -> ../../../RT-style-JS_public/
+      │       └── upstream
+      └── tester
+          ├── authored
+          │   └── test_routine.sh
+          ├── RT_Format
+          │   ├── RT_Format
+          │   ├── RT_Format.el
+          │   ├── test_0_data.c
+          │   └── test_1_data.py
+          └── tool
+              └── setup
+      </RT-code>
 
     </RT-article>
   </body>
