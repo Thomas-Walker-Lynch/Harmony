@@ -74,7 +74,7 @@
       </p>
 
       <RT-code>
-        > . setup &ltrole&gt
+        > . setup &lt;role&gt;
       </RT-code>
 
       <p>
@@ -237,7 +237,7 @@
       <h1>Releases</h1>
 
       <p>
-        As a first step, a developer creates a <RT-term>release candidate</RT-term> inside of the <RT-code>consumer/release/</RT-code>. This is typically done by running <RT-code>make</RT-code> to stage the release, where it can be experimented on, followed by running <RT-code>release write</RT-code>.  The developer will often modify the versions of one or both of those tools that come with the Harmony skeleton.
+        As a first step, a developer creates a <RT-term>release candidate</RT-term> inside of the <RT-code>consumer/release/</RT-code> directory. This is typically done by running <RT-code>make</RT-code> to stage the release, where it can be experimented on, followed by running <RT-code>release write</RT-code>.  The developer will often modify the versions of one or both of those tools that come with the Harmony skeleton.
         The release candidate remains stable until the next <RT-term>developer release</RT-term>.
       </p>
       <p>
@@ -247,21 +247,7 @@
         It is common for a developer to open a second window on his desktop, and then enter the project as a tester in that second window. The developer can then make a release candidate, run the tests, edit source code, and perhaps tests, and then quickly spin through the test-debug-fix-release cycle repeatedly.
       </p>
       <p>
-        When the product manager determines the work product to be sufficiently reliable and feature rich, the administrator will make a <RT-term>project release</RT-term>. He will do this by creating a branch called <RT-code>release_v&ltmajor&gt</RT-code> and tagging it. The major release numbers go up incrementally.
-      </p>
-
-      <h1> Modifying the setup </h1>
-      
-      <p>
-        For project wide setup modifications create or edit <RT-code>shared/authored/setup</RT-code>. Note that the <RT-code>shared/authored/setup</RT-code> file is sourced after the inherited <RT-code>shared/tool/setup</RT-code> file, and before the <RT-code>&lt;role&gt;/tool/setup</RT-code> file.
-      </p>
-        
-      <p>
-        For role specific setup modifications edit the appropriate <RT-code>&lt;role&gt;/tool/setup</RT-code> file.
-      </p>
-      <p>
-        If these approaches are not sufficient, then edit the setup scripts directly. Note however, that such changes
-        will appear when the Harmony sync tool is run.
+        When the product manager determines the work product to be sufficiently reliable and feature rich, the administrator will make a <RT-term>project release</RT-term>. He will do this by creating a branch called <RT-code>release_v&lt;major&gt;</RT-code> and tagging it. The major release numbers go up incrementally.
       </p>
 
       <h1>The version 2.2 Harmony directory tree</h1>
