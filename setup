@@ -36,7 +36,10 @@ fi
 
 # setup the project
 #
-  source shared/authored/setup
+  source shared/tool/setup
+  if [[ -f "shared/authored/setup" ]]; then
+    source shared/authored/setup
+  fi
 
 # setup tools
 #

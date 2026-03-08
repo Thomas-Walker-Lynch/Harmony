@@ -47,11 +47,9 @@ unset PYTHONHOME
 # PATH
 #   precedence: last defined, first discovered
   
-  PATH="$REPO_HOME/shared/third_party/RT-project-share/release/bash:$PATH"
-  PATH="$REPO_HOME/shared/third_party/RT-project-share/release/amd64:$PATH"
-  PATH="$REPO_HOME/shared/third_party:$PATH"
   PATH="$REPO_HOME/shared/authored:$PATH"
   PATH="$REPO_HOME/shared/made:$PATH"
+  PATH="$REPO_HOME/shared/tool:$PATH"
 
   # Remove duplicates
   clean_path() {
