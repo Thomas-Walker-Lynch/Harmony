@@ -13,14 +13,7 @@ set -e
 set -x
 
   cd "$REPO_HOME"/developer || exit 1
-  # /bin/make -f tool/makefile $@
-
-  mkdir -p scratchpad/authored
-  cp authored/HTTP_server.js scratchpad/authored/
-  cp authored/port_forwarder scratchpad/authored/
-  cp authored/port_forwarder_CLI scratchpad/authored/
-  cp authored/permission_RT scratchpad/authored/
-  cp authored/permission_UPG scratchpad/authored/
+  /bin/make -f tool/makefile $@
 
 set +x
 echo "$(script_fn) done."

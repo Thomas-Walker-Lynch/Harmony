@@ -10,8 +10,6 @@ This document describes how to install a project-local Python environment under:
 shared/third_party/Python
 #+end_src
 
-This environment is shared across the =developer= and =tester= roles and is automatically activated through their respective =env_<role>= scripts.
-
 * Precondition
 
 Ensure the following:
