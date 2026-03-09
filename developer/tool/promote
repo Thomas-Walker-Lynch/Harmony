@@ -3,11 +3,11 @@
 
 import os ,sys ,shutil ,stat ,pwd ,grp ,glob ,tempfile
 
-HELP = """usage: release {write|clean|ls|diff|help|dry write}
-  write       Writes promoted files from scratchpad/stage into consumer/release. Only updates newer files.
-  clean       Remove all contents of the consumer/release directory.
-  ls          List consumer/release as an indented tree: PERMS  OWNER  NAME.
-  diff        List files in consumer/release that are not in scratchpad/stage, or are newer.
+HELP = """usage: promote {write|clean|ls|diff|help|dry write}
+  write       Writes promoted files from scratchpad/made into consumer/made. Only updates newer files.
+  clean       Remove all contents of the consumer/made directory.
+  ls          List consumer/made as an indented tree: PERMS  OWNER  NAME.
+  diff        List files in consumer/made that are not in scratchpad/made, or are newer.
   help        Show this message.
   dry write   Preview what write would do without modifying the filesystem.
 """
@@ -47,7 +47,7 @@ def cpath(*parts):
   return os.path.join(
     repo_home()
     ,"consumer"
-    ,"release"
+    ,"made"
     ,*parts
   )
 
@@ -72,7 +72,7 @@ def _display_dst(p_abs: str) -> str:
       ,consumer_root()
     )
     rel = "" if rel == "." else rel
-    return "$REPO_HOME/consumer/release" + ("/" + rel if rel else "")
+    return "$REPO_HOME/consumer/made" + ("/" + rel if rel else "")
   except Exception:
     return p_abs
 
@@ -141,7 +141,7 @@ def list_tree(root_dp):
     if( len(ownergrp) > ogw ):
       ogw = len(ownergrp)
 
-  print("consumer/release/")
+  print("consumer/made/")
   for isdir ,depth ,perms ,ownergrp ,name in entries:
     indent = "  " * depth
     print(f"{perms}  {ownergrp:<{ogw}}  {indent}{name}")
@@ -180,10 +180,10 @@ def cmd_write(dry=False):
 
   src_root = dpath(
     "scratchpad"
-    ,"stage"
+    ,"made"
   )
   if( not os.path.isdir(src_root) ):
-    exit_with_status(f"cannot find developer scratchpad stage at '{_display_src(src_root)}'")
+    exit_with_status(f"cannot find developer scratchpad made at '{_display_src(src_root)}'")
 
   wrote = False
   for root ,dirs ,files in os.walk(src_root):
@@ -220,11 +220,11 @@ def cmd_diff():
   dst_root = cpath()
   src_root = dpath(
     "scratchpad"
-    ,"stage"
+    ,"made"
   )
 
   if( not os.path.isdir(dst_root) ):
-    print(f"Release directory {_display_dst(dst_root)} does not exist.")
+    print(f"Consumer made directory {_display_dst(dst_root)} does not exist.")
     return
 
   found_diff = False
@@ -237,17 +237,17 @@ def cmd_diff():
       src_abs = os.path.join(src_root ,rel)
 
       if( not os.path.exists(src_abs) ):
-        print(f"Orphaned in release: {rel}")
+        print(f"Orphaned in consumer made: {rel}")
         found_diff = True
       else:
         dst_mtime = os.stat(dst_abs).st_mtime
         src_mtime = os.stat(src_abs).st_mtime
         if(dst_mtime > src_mtime):
-          print(f"Newer in release: {rel}")
+          print(f"Newer in consumer made: {rel}")
           found_diff = True
 
   if( not found_diff ):
-    print("No differences found. Release matches stage.")
+    print("No differences found. Consumer made matches developer scratchpad made.")
 
 def cmd_clean():
   assert_setup()

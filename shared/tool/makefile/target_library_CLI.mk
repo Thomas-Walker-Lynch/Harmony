@@ -1,4 +1,4 @@
-# make/target_lib_CLI.mk — build *.lib.c and *.CLI.c
+# make/target_cli_lib.mk — build *.lib.c and *.CLI.c
 # written for the Harmony skeleton, always invoked from cwd  $REPO_HOME/<role>
 # files have two suffixes by convention, e.g.: X.lib.c or Y.CLI.c 
 
@@ -11,8 +11,10 @@
 C              ?= gcc
 CFLAGS         ?=
 C_SOURCE_DIR   ?= cc
-LIBRARY_FILE   ?=
-MACHINE_DIR    ?= scratchpad/machine
+BUILD_DIR      ?= scratchpad/build
+LIBRARY_FILE   ?= $(BUILD_DIR)/made/lib$(PROJECT).a
+MACHINE_DIR    ?= $(BUILD_DIR)/made
+OBJECT_DIR     ?= $(BUILD_DIR)/object
 LN_FLAGS       ?=
 
 #--------------------------------------------------------------------------------
@@ -27,8 +29,8 @@ c_base_lib  := $(sort $(patsubst %.lib.c,%, $(notdir $(c_source_lib))))
 c_base_exec := $(sort $(patsubst %.CLI.c,%, $(notdir $(c_source_exec))))
 
 # two sets of object files, one for the lib, and one for the CLI programs
-object_lib  := $(patsubst %, scratchpad/%.lib.o, $(c_base_lib))
-object_exec := $(patsubst %, scratchpad/%.CLI.o, $(c_base_exec))
+object_lib  := $(patsubst %, $(OBJECT_DIR)/%.lib.o, $(c_base_lib))
+object_exec := $(patsubst %, $(OBJECT_DIR)/%.CLI.o, $(c_base_exec))
 
 # executables are made from exec_ sources
 exec_ := $(patsubst %, $(MACHINE_DIR)/%, $(c_base_exec))
@@ -52,7 +54,7 @@ usage:
 
 .PHONY: version
 version:
-	@echo makefile version 7.1
+	@echo makefile version 8.0
 	if [ ! -z "$(C)" ]; then $(C) -v; fi
 	/bin/make -v
 
@@ -60,6 +62,7 @@ version:
 information:
 	@printf "· → Unicode middle dot — visible: [%b]\n" "·"
 	@echo "C_SOURCE_DIR: " $(C_SOURCE_DIR)
+	@echo "BUILD_DIR: " $(BUILD_DIR)
 	@echo "c_source_lib: " $(c_source_lib)
 	@echo "c_source_exec: " $(c_source_exec)
 	@echo "c_base_lib: " $(c_base_lib)
@@ -72,6 +75,7 @@ information:
 library: $(LIBRARY_FILE)
 
 $(LIBRARY_FILE): $(object_lib)
+	@mkdir -p $(MACHINE_DIR)
 	@if [ -s "$@" ] || [ -n "$(object_lib)" ]; then \
 		echo "ar rcs $@ $^"; \
 		ar rcs $@ $^; \
@@ -93,13 +97,14 @@ clean:
 	rm -f $(LIBRARY_FILE)
 	for obj in $(object_lib) $(object_exec); do rm -f $$obj $${obj%.o}.d || true; done
 	for i in $(exec_); do [ -e $$i ] && rm $$i || true; done
+	rm -rf $(BUILD_DIR)
 
 
 # recipes
-scratchpad/%.o: $(C_SOURCE_DIR)/%.c
+$(OBJECT_DIR)/%.o: $(C_SOURCE_DIR)/%.c
+	@mkdir -p $(OBJECT_DIR)
 	$(C) $(CFLAGS) -o $@ -c $<
 
-$(MACHINE_DIR)/%: scratchpad/%.CLI.o
-	mkdir -p $(MACHINE_DIR)
+$(MACHINE_DIR)/%: $(OBJECT_DIR)/%.CLI.o
+	@mkdir -p $(MACHINE_DIR)
 	$(C) -o $@ $< $(LN_FLAGS)
-

@@ -3,11 +3,11 @@
 .EXPORT_ALL_VARIABLES:
 
 RT_MAKEFILE_DP := $(REPO_HOME)/shared/tool/makefile
-include $(RT_INCOMMON)/make/environment_RT_1.mk
+include $(RT_MAKEFILE_DP)/environment_RT_1.mk
 
 .PHONY: usage 
 usage:
-	@printf "Usage: make [usage|information|all|lib|CLI|kmod|clean]\n"
+	@printf "Usage: make [usage|version|information|all|lib|CLI|kmod|clean]\n"
 
 .PHONY: version 
 version:

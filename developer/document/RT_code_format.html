@@ -19,9 +19,16 @@
 
       <RT-TOC level="1"></RT-TOC>
 
+      <p>
+        We are not big on revising inherited or legacy code for naming conventions, though no one will hold you back. However, new code should follow these conventions.
+      </p>
+
       <h1>Object vs. instance nomenclature</h1>
       <p>
-        We reserve the word 'object' for its general English meaning. When discussing data that is manipulated solely through a defined interface, use the term <RT-term>instance</RT-term>.
+        We reserve the word 'object' for its general English meaning. When discussing data that is manipulated solely through a defined interface, use the term <RT-term>instance</RT-term>. It is too much of an ask to remove the word <RT-term>object</RT-term> from the language, and this is reflected in the fact that few people use the term precisely.
+      </p>
+      <p>
+        Hence, a programmer can talk about math objects, as things found in mathematics, and C objects, as things found in the C language, even though they are not instantiated from classes, or might not even be data. For example, the <RT-term>for loop</RT-term> is a C object.
       </p>
 
       <h1>Identifier Names</h1>
@@ -32,6 +39,19 @@
         <li>Functions, variables: <RT-code>snake-kebab_case</RT-code> (if <RT-code>-</RT-code> is supported) or <RT-code>snake_case</RT-code> (if not supported)</li>
         <li>Globals: <RT-code>UPPER_SNAKE_CASE</RT-code></li>
       </ul>
+
+      <h2>Proper nouns and acronyms</h2>
+      <p>
+        Even in <RT-code>PascalCase</RT-code> and <RT-code>snake_case</RT-code>, proper nouns and acronyms remain capitalized, as per standard English language conventions (e.g., <RT-code>IEEE_publication_count</RT-code>).
+      </p>
+
+      <h2>Abbreviations</h2>
+      <p>
+        For outer scope identifiers we spell things out for clarity. This follows Lisp programming culture. This makes it clear for people who are 'not in the club' to be able to get started and read the code, and tends to be self documenting. Our file system names mirror our program identifier rules, so you find things such as 'library', 'source', spelled out.
+      </p>
+      <p>
+        For long words, inner scope identifiers, temporary variables, and conventional suffixes, abbreviations become more common. By the time we get to inner loops variable names, such as loop counters are typically 1 letter long. 
+      </p>
 
       <h2>Primary and secondary separators (snake-kebab_case)</h2>
       <p>
@@ -57,9 +77,11 @@
       </ul>
 
       <ul>
+        <li><RT-code>*_dir</RT-code> : directory name</li>
         <li><RT-code>*_dirn</RT-code> : directory name</li>
         <li><RT-code>*_dirp</RT-code> : directory path</li>
         <li><RT-code>*_dirpr</RT-code> / <RT-code>*_dirpa</RT-code> : relative / absolute directory path</li>
+        <li><RT-code>*_file</RT-code> : file name</li>
         <li><RT-code>*_filen</RT-code> : file name</li>
         <li><RT-code>*_filep</RT-code> : file path</li>
         <li><RT-code>*_filepr</RT-code> / <RT-code>*_fpa</RT-code> : relative / absolute file path</li>
@@ -67,10 +89,7 @@
         <li><RT-code>*_fsnodp</RT-code> : file system node path (when type is unspecified)</li>
       </ul>
 
-      <h2>Proper nouns and acronyms</h2>
-      <p>
-        Even in <RT-code>PascalCase</RT-code> and <RT-code>snake_case</RT-code>, proper nouns and acronyms remain capitalized, as per standard English language conventions (e.g., <RT-code>IEEE_publication_count</RT-code>).
-      </p>
+
 
       <h1>Comma separated lists</h1>
 

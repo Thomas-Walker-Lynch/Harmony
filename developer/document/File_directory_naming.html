@@ -39,7 +39,7 @@
 
       <h2>Hyphens and spaces</h2>
 
-      <p>In a C language culture, file names use underscores between words. In a Lisp language culture use snake-kebab_case. Spaces are generally not used in program file names.
+      <p>In a C language culture, file names use underscores between words. In a Lisp language culture use snake-kebab_case. Spaces are generally not used in program file names. Though the Harmony skeleton is language agnostic, it was first used with C, hence file names use primarily underscores.
       </p>
 
 
@@ -70,6 +70,17 @@
         <li><RT-code>.cli.c</RT-code> : Compiler fodder made into a stand-alone executable.</li>
         <li><RT-code>.lib.c</RT-code> : Library code source, compiled as an object file and added to the project archive.</li>
         <li><RT-code>.mod.c</RT-code> : Kernel module sources.</li>
+      </ul>
+
+      <h1>Exercises</h1>
+      <h2>Exercise 1: Program file names</h2>
+      <p>
+        Rename the following poorly named files to strictly adhere to the RT naming conventions. Pay close attention to the language culture, the capitalization of acronyms, and the rule for spelling out abbreviations in outer scope identifiers.
+      </p>
+      <ul>
+        <li>A C-culture makefile that builds a target library and command line interface: <RT-code>target-lib-cli.mk</RT-code></li>
+        <li>A Lisp-culture source file for an HTML parsing module: <RT-code>html_parser_mod.el</RT-code></li>
+        <li>A C language source file that initializes an HTTP server: <RT-code>init-http-srv.c</RT-code></li>
       </ul>
 
     </RT-article>
