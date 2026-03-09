@@ -109,12 +109,10 @@
         }
       </RT-code>
 
-      <p>This rule is not applied to function calls in Lisp.</p>
-
-      <h2>Short stuff rule</h2>
-      <p>If a statement can fit on a single line and is short, keep it on a single line without braces.</p>
+      <p>This rule is not applied to function calls in Lisp. For example, the outer parentheses forming a function call receive no padding, even when they contain nested data lists:</p>
+      
       <RT-code>
-        if(x == 0) return;
+        (cat 'a 'b '( 2 (4 5)))
       </RT-code>
 
       <h1>Indentation</h1>
