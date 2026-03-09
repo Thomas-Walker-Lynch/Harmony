@@ -3,7 +3,7 @@
 .EXPORT_ALL_VARIABLES:
 
 RT_MAKEFILE_DP := $(REPO_HOME)/shared/tool/makefile
-include $(RT_MAKEFILE_DP)/environment_RT_1.mk
+include $(RT_MAKEFILE_DP)/Harmony.mk
 
 .PHONY: usage 
 usage:

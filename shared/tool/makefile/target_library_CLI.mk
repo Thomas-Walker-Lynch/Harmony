@@ -8,14 +8,13 @@
 #--------------------------------------------------------------------------------
 # defaults for environment variables
 
-C              ?= gcc
-CFLAGS         ?=
-C_SOURCE_DIR   ?= cc
-BUILD_DIR      ?= scratchpad/build
-LIBRARY_FILE   ?= $(BUILD_DIR)/made/lib$(PROJECT).a
-MACHINE_DIR    ?= $(BUILD_DIR)/made
-OBJECT_DIR     ?= $(BUILD_DIR)/object
-LN_FLAGS       ?=
+C              ?= cc
+CFLAGS         ?= -O2 -Wall -Wextra -pedantic
+C_SOURCE_DIR   ?= src
+OBJECT_DIR     ?= obj
+LIBRARY_DIR    ?= lib
+MACHINE_DIR    ?= bin
+LN_FLAGS       ?= -L$(LIBRARY_DIR) -L/usr/local/lib -L/usr/lib
 
 #--------------------------------------------------------------------------------
 # derived variables

@@ -1,5 +1,5 @@
-#ifndef RT·ENVIRONMENT_H
-#define RT·ENVIRONMENT_H
+#ifndef RT_global_H
+#define RT_global_H
   #include <stdint.h>
   #include <stdbool.h>
 

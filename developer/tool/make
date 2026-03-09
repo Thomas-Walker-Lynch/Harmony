@@ -12,7 +12,7 @@ script_afp=$(realpath "${BASH_SOURCE[0]}")
 set -e
 set -x
 
-  cd "$REPO_HOME"/developer || exit 1
+  cd "$REPO_HOME/developer" || exit 1
   /bin/make -f tool/makefile $@
 
 set +x
