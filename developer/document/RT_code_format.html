@@ -13,7 +13,7 @@
     <RT-article>
       <RT-title 
         author="Thomas Walker Lynch" 
-        date="2026-03-09" 
+        date="2026-03-11" 
         title="RT code format conventions">
       </RT-title>
 
@@ -144,7 +144,7 @@
 
       <h1>The CLI vs. work function pattern</h1>
       <p>
-        To avoid the "String Trap" — where logic is tightly coupled to the terminal and requires string serialization to reuse — executable modules must separate the Command Line Interface from the core logic.
+        To avoid the "String Trap" (where logic is tightly coupled to the terminal and requires string serialization to reuse) executable modules must separate the Command Line Interface from the core logic.
       </p>
       <ul>
         <li><strong>Work Functions:</strong> Implement core logic. They accept and return native instances (ints, lists, paths), never look at <RT-code>sys.argv</RT-code> (or equivalent), and do not depend on being run from a command line.</li>
@@ -162,6 +162,29 @@
         <li>Functions should document ownership of pointers and lifetimes.</li>
         <li>Prefer explicit <RT-code>*_count</RT-code> parameters over sentinel values when passing arrays.</li>
       </ul>
+
+      <h1>Automated formatting tools</h1>
+      <p>
+        To ensure consistency without manual drudgery, the Harmony skeleton provides a dedicated code formatter called <RT-code>RTfmt</RT-code>. A person can find this tool in the <RT-code>shared/tool/</RT-code> directory.
+      </p>
+
+      <h2>The RTfmt CLI</h2>
+      <p>
+        <RT-code>RTfmt</RT-code> is a shallow-tokenizing formatter written in Python. It parses source code into structural blocks (strings, comments, commas, and enclosures) without needing a full Abstract Syntax Tree. This architecture allows it to safely enforce RT formatting rules across multiple languages while preserving indentation and protecting native operators.
+      </p>
+      <ul>
+        <li><RT-code>RTfmt write &lt;file...&gt;</RT-code> : Formats files in place. It performs a content comparison before writing, leaving the file modification timestamp untouched if the file is already compliant.</li>
+        <li><RT-code>RTfmt pipe</RT-code> : Reads from standard input and writes to standard output, making it ideal for editor integration.</li>
+        <li><RT-code>--lisp</RT-code> : A flag that instructs the formatter to skip the outermost enclosure padding rule, honoring the Lisp function call exception.</li>
+      </ul>
+
+      <h2>Emacs integration</h2>
+      <p>
+        For Emacs users, the <RT-code>RTfmt.el</RT-code> file provides the <RT-code>RTfmt-buffer</RT-code> interactive command.
+      </p>
+      <p>
+        This wrapper passes the current buffer through the <RT-code>RTfmt pipe</RT-code> command. It automatically detects Lisp-derived modes to append the <RT-code>--lisp</RT-code> flag. Furthermore, it utilizes a non-destructive buffer replacement strategy. This ensures that a programmer's cursor position, selection marks, and window scroll state remain anchored exactly where they were before the formatting occurred.
+      </p>
 
       <h1>Exercises</h1>
       <h2>Exercise 1: Comma and function call formatting</h2>
@@ -196,7 +219,6 @@
         <li>A boolean indicating if the NASA data download is complete: <RT-code>isNasaDone</RT-code></li>
         <li>A variable holding multiple absolute file paths for images: <RT-code>imageFiles</RT-code></li>
       </ul>
-
 
     </RT-article>
   </body>

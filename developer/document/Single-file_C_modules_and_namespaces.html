@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Single-file C modules and namespaces</title>
+    <title>C modules, namespaces, and the build lifecycle</title>
     <script src="setup.js"></script>
     <script>
       window.StyleRT.include('RT/theme');
@@ -13,8 +13,8 @@
     <RT-article>
       <RT-title 
         author="Thomas Walker Lynch" 
-        date="2026-03-10" 
-        title="Single-file C modules and namespaces">
+        date="2026-03-11" 
+        title="C modules, namespaces, and the build lifecycle">
       </RT-title>
 
       <RT-TOC level="1"></RT-TOC>
@@ -88,7 +88,7 @@
         #include "Math.lib.c"
       </RT-code>
       <p>
-        Because every file is protected by a <RT-code>·ONCE</RT-code> include guard, it is safe for multiple modules to include the same dependency. The preprocessor will only expand the interface once per translation unit.
+        Because every file is protected by a <RT-code>·ONCE</RT-code> include guard, it is safe for multiple modules to include the same dependency. The preprocessor will expand the interface once per translation unit.
       </p>
 
       <h2>Information hiding</h2>
@@ -118,6 +118,52 @@
       </p>
       <p>
         A <RT-code>.CLI.c</RT-code> file includes the necessary <RT-code>.lib.c</RT-code> files, parses command-line arguments in the <RT-code>main</RT-code> function, and passes native data types to a dedicated <RT-code>CLI()</RT-code> function to orchestrate the core logic.
+      </p>
+
+      <h1>Directory structure and namespaces</h1>
+      <p>
+        The physical layout of the <RT-code>authored</RT-code> directory dictates how the build orchestrator finds the source code.
+      </p>
+      <ul>
+        <li><strong>Flat Structure:</strong> If a project does not utilize namespaces, the <RT-code>.lib.c</RT-code> and <RT-code>.CLI.c</RT-code> files reside directly inside the <RT-code>developer/authored/</RT-code> directory.</li>
+        <li><strong>Namespaced Structure:</strong> If a project utilizes namespaces, the files are grouped into subdirectories matching the namespace name, such as <RT-code>developer/authored/ExampleGreet/</RT-code>.</li>
+      </ul>
+
+      <h1>Making the code</h1>
+      <p>
+        The developer compiles the code using the <RT-code>make</RT-code> wrapper script located in <RT-code>developer/tool/make</RT-code>. This script accepts two primary arguments: the build command and the target namespace.
+      </p>
+
+      <RT-code>
+        > make &lt;command&gt; [namespace]
+      </RT-code>
+
+      <p>
+        To build the <RT-code>ExampleGreet</RT-code> code, a person issues the following command from the developer workspace:
+      </p>
+
+      <RT-code>
+        > make all ExampleGreet
+      </RT-code>
+
+      <p>
+        Behind the scenes, the <RT-code>make</RT-code> wrapper assigns the namespace to an environment variable and calls the master orchestrator makefile. The orchestrator detects the namespace, updates the source directory search path to <RT-code>authored/ExampleGreet</RT-code>, and injects the appropriate namespace macros during compilation. 
+      </p>
+      <p>
+         The orchestrator compiles the <RT-code>.lib.c</RT-code> files into object files under <RT-code>scratchpad/build/object/</RT-code>, archives them into a library file, and links the <RT-code>.CLI.c</RT-code> objects into standalone executables. The final artifacts are placed in the <RT-code>scratchpad/made/</RT-code> directory.
+      </p>
+
+      <h1>Promoting the artifacts</h1>
+      <p>
+        Artifacts resting in the scratchpad are volatile and private to the developer. To share the executables and libraries with the rest of the project (such as the tester or consumer roles), the developer must promote them.
+      </p>
+      
+      <RT-code>
+        > promote write
+      </RT-code>
+
+      <p>
+        The <RT-code>promote</RT-code> tool compares the contents of <RT-code>developer/scratchpad/made/</RT-code> against <RT-code>consumer/made/</RT-code>. It atomically copies any new or updated files to the consumer workspace, stripping write permissions to enforce the immutability of the deployment target. Once promoted, the <RT-code>hello</RT-code> executable is ready for testing.
       </p>
 
     </RT-article>
