@@ -1,17 +1,17 @@
-#ifndef ExampleGreet·math·ONCE
-#define ExampleGreet·math·ONCE
+#ifndef ExampleGreet·Math·ONCE
+#define ExampleGreet·Math·ONCE
 
-#ifndef ExampleGreet·math
-  #define ExampleGreet·math
+#ifndef ExampleGreet·Math
+  #define ExampleGreet·Math
 #endif
 
 int ExampleGreet·Math·add(int a ,int b);
 
-#ifdef ExampleGreet·math
+#ifdef ExampleGreet·Math
 
 int ExampleGreet·Math·add(int a ,int b){
   return a + b;
 }
 
-#endif // ExampleGreet·math
-#endif // ExampleGreet·math·ONCE
+#endif // ExampleGreet·Math
+#endif // ExampleGreet·Math·ONCE

@@ -1,26 +1,24 @@
-#ifndef GREETER_LIB_C
-#define GREETER_LIB_C
-#ifndef FACE
-  #define GREETER_IMPL
+#ifndef ExampleGreet·Greeter·ONCE
+#define ExampleGreet·Greeter·ONCE
+
+#ifndef ExampleGreet·Greeter
+  #define ExampleGreet·Greeter
 #endif
 
-#define FACE
-#include "math.lib.c"
-#undef FACE
+#include "Math.lib.c"
 
-void Greet·hello_loop(int count);
+void ExampleGreet·Greeter·hello_loop(int count);
 
-#ifdef GREETER_IMPL
+#ifdef ExampleGreet·Greeter
 
 #include <stdio.h>
 
-void Greet·hello_loop(int count){
+void ExampleGreet·Greeter·hello_loop(int count){
   for(int TM = 0; TM < count; ++TM){
-    int current_count = Math·add(TM ,1);
+    int current_count = ExampleGreet·Math·add(TM ,1);
     printf("Hello iteration: %d\n" ,current_count);
   }
 }
 
-#endif // GREETER_IMPL
-#endif // GREETER_LIB_C
-
+#endif // ExampleGreet·Greeter
+#endif // ExampleGreet·Greeter·ONCE

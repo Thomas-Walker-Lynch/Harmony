@@ -14,7 +14,6 @@ CFLAGS           += -MMD -MP
 CFLAGS           += -include "$(REPO_HOME)/shared/tool/makefile/RT_global.h"
 CFLAGS           += -I $(C_SOURCE_DIR)
 
-
 # Project administrators can override this in their local makefile
 LIBRARY_NAME     ?= $(PROJECT)
 LIBRARY_NAME     := $(subst -,_,$(LIBRARY_NAME))
@@ -33,3 +32,4 @@ KMOD_CCFLAGS     ?= -I $(KMOD_SOURCE_DIR)
 # Pass the global header to Kbuild exactly as done for user-space
 KMOD_CCFLAGS     += -include $(REPO_HOME)/shared/tool/makefile/RT_global.h
 KMOD_OUTPUT_DIR  ?= scratchpad/kmod
+

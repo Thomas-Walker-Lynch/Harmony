@@ -5,6 +5,12 @@
 RT_MAKEFILE_DP := $(REPO_HOME)/shared/tool/makefile
 include $(RT_MAKEFILE_DP)/Harmony.mk
 
+# If a namespace is provided, update the source directory
+ifneq ($(NAMESPACE),)
+  C_SOURCE_DIR := authored/$(NAMESPACE)
+  export C_SOURCE_DIR
+endif
+
 .PHONY: usage 
 usage:
 	@printf "Usage: make [usage|version|information|all|lib|CLI|kmod|clean]\n"
@@ -23,6 +29,8 @@ information:
 	@printf "local ----------------------------------------\n"
 	-@echo CURDIR='$(CURDIR)'
 	@echo REPO_HOME="$(REPO_HOME)"
+	@echo NAMESPACE="$(NAMESPACE)"
+	@echo C_SOURCE_DIR="$(C_SOURCE_DIR)"
 	@echo KMOD_BUILD_DIR="/lib/modules/$(shell uname -r)/build"
 	@echo CURDIR="$(CURDIR)"
 	@printf "target_library_CLI.mk ----------------------------------------\n"

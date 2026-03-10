@@ -100,9 +100,15 @@ clean:
 
 
 # recipes
+#$(OBJECT_DIR)/%.o: $(C_SOURCE_DIR)/%.c
+#	@mkdir -p $(OBJECT_DIR)
+#	$(C) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
+
+# The local logic checks if NAMESPACE is defined, and if the target is a .lib.o file
 $(OBJECT_DIR)/%.o: $(C_SOURCE_DIR)/%.c
 	@mkdir -p $(OBJECT_DIR)
-	$(C) $(CFLAGS) -o $@ -c $<
+	$(C) $(CFLAGS) $(if $(and $(NAMESPACE),$(findstring .lib,$@)),-D$(NAMESPACE)·$(basename $*),) -o $@ -c $<
+
 
 $(MACHINE_DIR)/%: $(OBJECT_DIR)/%.CLI.o
 	@mkdir -p $(MACHINE_DIR)
