@@ -19,10 +19,20 @@ To create a Harmony-based project, the project administrator performs these step
 
 ## Viewing the Documentation
 
-To view the project documentation with its intended formatting, a person must provide the RT style library. It is recommended to clone the styling repository side-by-side with your new project directory, and then link it into the third-party directory.
+To view the project documentation with its intended formatting, a person must provide the RT style library.  One way to do this is to clone the styling repository side-by-side with your new project directory, and then to link it into the third-party directory.
 
-From the root of your new project repository, run:
+From the parent directory of your new project, clone the required style repository:
+
+```bash
+cd ..
+git clone -b release_v1 https://github.com/Thomas-Walker-Lynch/RT-style-JS_public
+```
+
+Then, from the root of your new project repository, link it:
 
 ```bash
 cd shared/third_party
 ln -s ../../../RT-style-JS_public RT-style-JS_public
+```
+
+Find an introductory document at `document/Introduction_to_Harmony.html'. After the style library is installed, clicking on it in file navigator should open it in a browser.
