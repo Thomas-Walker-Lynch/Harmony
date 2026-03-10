@@ -1,4 +1,4 @@
-# developer/tool/makefile — Orchestrator (Hybrid)
+# developer/tool/makefile - Orchestrator (Hybrid)
 .SUFFIXES:
 .EXPORT_ALL_VARIABLES:
 
@@ -19,10 +19,10 @@ usage:
 version:
 	@printf "local ----------------------------------------\n"
 	@echo tool/makefile version 2.0
-	@printf "target_library_CLI.mk ----------------------------------------\n"
-	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kmod.mk version
+	@printf "Harmony.mk ----------------------------------------\n"
+	@$(MAKE) -f $(RT_MAKEFILE_DP)/Harmony.mk version
 	@printf "target_kmod.mk ----------------------------------------\n"
-	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_library_CLI.mk version
+	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kmod.mk version
 
 .PHONY: information
 information:
@@ -33,8 +33,8 @@ information:
 	@echo C_SOURCE_DIR="$(C_SOURCE_DIR)"
 	@echo KMOD_BUILD_DIR="/lib/modules/$(shell uname -r)/build"
 	@echo CURDIR="$(CURDIR)"
-	@printf "target_library_CLI.mk ----------------------------------------\n"
-	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_library_CLI.mk information
+	@printf "Harmony.mk ----------------------------------------\n"
+	@$(MAKE) -f $(RT_MAKEFILE_DP)/Harmony.mk information
 	@printf "target_kmod.mk ----------------------------------------\n"
 	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kmod.mk information
 
@@ -43,11 +43,11 @@ all: library CLI kmod
 
 .PHONY: library lib
 library lib:
-	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_library_CLI.mk library
+	@$(MAKE) -f $(RT_MAKEFILE_DP)/Harmony.mk library
 
 .PHONY: CLI
 CLI:
-	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_library_CLI.mk CLI
+	@$(MAKE) -f $(RT_MAKEFILE_DP)/Harmony.mk CLI
 
 .PHONY: kmod
 kmod:
@@ -56,7 +56,7 @@ kmod:
 .PHONY: clean
 clean:
 	@printf "local ----------------------------------------\n"
-	@printf "target_library_CLI.mk ----------------------------------------\n"
-	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_library_CLI.mk clean
+	@printf "Harmony.mk ----------------------------------------\n"
+	@$(MAKE) -f $(RT_MAKEFILE_DP)/Harmony.mk clean
 	@printf "target_kmod.mk ----------------------------------------\n"
 	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kmod.mk clean
