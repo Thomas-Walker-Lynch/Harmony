@@ -43,12 +43,12 @@ fi
 
 # setup tools
 #
-  export PYTHON_HOME="${REPO_HOME}/shared/third_party/Python"
+  export PYTHON_HOME="${REPO_HOME}/shared/linked-project/Python"
   if [[ ":${PATH}:" != *":${PYTHON_HOME}/bin:"* ]]; then
     export PATH="${PYTHON_HOME}/bin:${PATH}"
   fi
 
-  RT_gcc="${REPO_HOME}/shared/third_party/RT_gcc/release"
+  RT_gcc="${REPO_HOME}/shared/linked-project/RT_gcc/release"
   if [[ ":${PATH}:" != *":${RT_gcc}:"* ]]; then
     export PATH="${RT_gcc}:${PATH}"
   fi

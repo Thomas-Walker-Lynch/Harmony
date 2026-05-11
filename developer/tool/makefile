@@ -21,8 +21,8 @@ version:
 	@echo tool/makefile version 2.0
 	@printf "Harmony.mk ----------------------------------------\n"
 	@$(MAKE) -f $(RT_MAKEFILE_DP)/Harmony.mk version
-	@printf "target_kmod.mk ----------------------------------------\n"
-	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kmod.mk version
+	@printf "target_kernel-module.mk ----------------------------------------\n"
+	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kernel-module.mk version
 
 .PHONY: information
 information:
@@ -35,8 +35,8 @@ information:
 	@echo CURDIR="$(CURDIR)"
 	@printf "Harmony.mk ----------------------------------------\n"
 	@$(MAKE) -f $(RT_MAKEFILE_DP)/Harmony.mk information
-	@printf "target_kmod.mk ----------------------------------------\n"
-	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kmod.mk information
+	@printf "target_kernel-module.mk ----------------------------------------\n"
+	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kernel-module.mk information
 
 .PHONY: all
 all: library CLI kmod
@@ -51,12 +51,12 @@ CLI:
 
 .PHONY: kmod
 kmod:
-	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kmod.mk kmod
+	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kernel-module.mk kmod
 
 .PHONY: clean
 clean:
 	@printf "local ----------------------------------------\n"
 	@printf "Harmony.mk ----------------------------------------\n"
 	@$(MAKE) -f $(RT_MAKEFILE_DP)/Harmony.mk clean
-	@printf "target_kmod.mk ----------------------------------------\n"
-	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kmod.mk clean
+	@printf "target_kernel-module.mk ----------------------------------------\n"
+	@$(MAKE) -f $(RT_MAKEFILE_DP)/target_kernel-module.mk clean

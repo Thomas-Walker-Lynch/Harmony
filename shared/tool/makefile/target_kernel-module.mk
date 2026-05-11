@@ -1,4 +1,4 @@
-# make/target_kmod.mk — build *.kmod.c as kernel modules (single-pass, kmod-only)
+# make/target_kernel-module.mk — build *.kmod.c as kernel modules (single-pass, kmod-only)
 # invoked from $REPO_HOME/<role>
 # version 1.4
 

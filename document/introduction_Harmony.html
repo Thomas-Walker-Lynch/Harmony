@@ -105,15 +105,15 @@
 
       <h1>After git clone</h1>
       <p>
-        Because git does not track certain directories (such as <RT-code>shared/third_party/</RT-code> and <RT-code>consumer/made/</RT-code>), a freshly cloned repository lacks external dependencies and consumable products. Team members must perform a few steps to populate these areas.
+        Because git does not track certain directories (such as <RT-code>shared/linked-project/</RT-code> and <RT-code>consumer/made/</RT-code>), a freshly cloned repository lacks external dependencies and consumable products. Team members must perform a few steps to populate these areas.
       </p>
 
       <h2>Third-party tools</h2>
       <p>
-        Harmony is language agnostic. When a project makes use of project-specific C, Python, NodeJS, Java, or other tools, the project administrator configures the project to expect these tools in the <RT-code>shared/third_party</RT-code> directory.
+        Harmony is language agnostic. When a project makes use of project-specific C, Python, NodeJS, Java, or other tools, the project administrator configures the project to expect these tools in the <RT-code>shared/linked-project</RT-code> directory.
       </p>
       <p>
-        Because multiple team members will have to repeat the third-party install process after cloning a project, the administrator should carefully document the third party tools installation steps and place the resulting documents in the <RT-code>shared/document</RT-code> directory. (The most common installation method is to clone the third party tool next to the project, then to symbolic link it under <RT-code>shared/third_party/</RT-code>.)
+        Because multiple team members will have to repeat the third-party install process after cloning a project, the administrator should carefully document the third party tools installation steps and place the resulting documents in the <RT-code>shared/document</RT-code> directory. (The most common installation method is to clone the third party tool next to the project, then to symbolic link it under <RT-code>shared/linked-project/</RT-code>.)
       </p>
       <p>
         If a person clones the project and does not set up third-party tools, commands will fall through the search path and perhaps find system-installed tools. Using system default tools is generally undesirable because each person who clones the project might be running different versions. This variation makes it harder for team members to coordinate and for consumers of the project work product to build functioning tools.
@@ -193,7 +193,7 @@
         Files found in a directory named <RT-code>scratchpad</RT-code> are not tracked. Hence, a <RT-code>git clone</RT-code> will always return empty <RT-code>scratchpad</RT-code> directories. It is common for tools to place intermediate files on a scratchpad. It is also common for files to be staged on a scratchpad. Tools play nice and use subdirectories on the pad, so a person who is aware of those subdirectory names can use a scratchpad as a temporary directory. There is a scratchpad maintenance tool that comes with the Harmony, called unimaginatively, <RT-code>scratchpad</RT-code>. Pay attention as one of its commands is <RT-code>clear</RT-code>, and that deletes everything on the current directory's scratchpad.
       </p>
       <p>
-        Third party software is installed under <RT-code>shared/third_party</RT-code>. Other files are said to be <RT-term>inherited</RT-term>, or to be <RT-term>customizations</RT-term>.
+        Third party software is installed under <RT-code>shared/linked-project</RT-code>. Other files are said to be <RT-term>inherited</RT-term>, or to be <RT-term>customizations</RT-term>.
       </p>
 
       <h1>Top-level repository layout</h1>
@@ -268,7 +268,7 @@
       <h2>Untracked directories</h2>
       <ol>
         <li><RT-code>consumer/made/</RT-code></li>
-        <li><RT-code>shared/third_party/</RT-code></li>
+        <li><RT-code>shared/linked-project/</RT-code></li>
         <li><RT-code>**/scratchpad/</RT-code></li>
       </ol>
 
@@ -328,8 +328,8 @@
       │   ├── promote
       │   └── setup
       ├── document
-      │ ├── Introduction_to_Harmony.html
-      │ ├── Product_Development_Roles_and_Workflow.html
+      │ ├── introduction_Harmony.html
+      │ ├── role-and-workflow_product-development.html
       │ └── setup.js
       ├── LICENSE
       </RT-code>
@@ -342,11 +342,11 @@
       ├── shared
       │ ├── authored
       │ ├── document
-      │ │ ├── install_generic.org
-      │ │ ├── install_Python.org
+      │ │ ├── installation_generic.org
+      │ │ ├── installation_Python.org
       │ │ └── setup.js
       │ ├── made
-      │ ├── style_directory_dict.js
+      │ ├── dictionary_style-directory.js
       │ ├── third_party
       │ │ ├── RT-style-JS_public -> ../../../RT-style-JS_public/
       │ │ └── upstream
@@ -362,9 +362,9 @@
           │ └── test_routine.sh
           ├── RT_Format
           │ ├── RT_Format
-          │ ├── RT_Format.el
-          │ ├── test_0_data.c
-          │ └── test_1_data.py
+          │ ├── RT-formatter.el
+          │ ├── data_test-0.c
+          │ └── data_test-1.py
           └── tool
               └── setup
 

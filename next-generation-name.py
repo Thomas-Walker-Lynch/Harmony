@@ -7,40 +7,40 @@ def CLI(argv=None) -> int:
   # Ordered list of renames: files first, then directories to preserve paths
   substitutions = [
     # Administrator
-    ("administrator/document/Release_howto.html" ,"administrator/document/how-to_release.html")
+    ("administrator/document/how-to_release.html" ,"administrator/document/how-to_release.html")
     
     # Developer
-    ,("developer/document/File_directory_naming.html" ,"developer/document/naming_file-and-directory.html")
-    ,("developer/document/RT_code_format.html" ,"developer/document/format_RT-code.html")
-    ,("developer/document/Single-file_C_modules_and_namespaces.html" ,"developer/document/single-file_C-module-and-namespace.html")
-    ,("developer/tool/do_all" ,"developer/tool/do-all")
+    ,("developer/document/naming_file-and-directory.html" ,"developer/document/naming_file-and-directory.html")
+    ,("developer/document/format_RT-code.html" ,"developer/document/format_RT-code.html")
+    ,("developer/document/single-file_C-module-and-namespace.html" ,"developer/document/single-file_C-module-and-namespace.html")
+    ,("developer/tool/do-all" ,"developer/tool/do-all")
     
     # Top-level documents
-    ,("document/Introduction_to_Harmony.html" ,"document/introduction_Harmony.html")
-    ,("document/Product-development_roles-and-workflow.html" ,"document/role-and-workflow_product-development.html")
-    ,("document/Product-maintenance_roles-and-workflow.html" ,"document/role-and-workflow_product-maintenance.html")
+    ,("document/introduction_Harmony.html" ,"document/introduction_Harmony.html")
+    ,("document/role-and-workflow_product-development.html" ,"document/role-and-workflow_product-development.html")
+    ,("document/role-and-workflow_product-maintenance.html" ,"document/role-and-workflow_product-maintenance.html")
     
     # Shared tools and documents
-    ,("shared/document/install_Python.org" ,"shared/document/installation_Python.org")
-    ,("shared/document/install_generic.org" ,"shared/document/installation_generic.org")
-    ,("shared/style_directory_dict.js" ,"shared/dictionary_style-directory.js")
+    ,("shared/document/installation_Python.org" ,"shared/document/installation_Python.org")
+    ,("shared/document/installation_generic.org" ,"shared/document/installation_generic.org")
+    ,("shared/dictionary_style-directory.js" ,"shared/dictionary_style-directory.js")
     ,("shared/tool/RTfmt" ,"shared/tool/RT-formatter")
-    ,("shared/tool/RTfmt.el" ,"shared/tool/RT-formatter.el")
-    ,("shared/tool/makefile/target_kmod.mk" ,"shared/tool/makefile/target_kernel-module.mk")
+    ,("shared/tool/RT-formatter.el" ,"shared/tool/RT-formatter.el")
+    ,("shared/tool/makefile/target_kernel-module.mk" ,"shared/tool/makefile/target_kernel-module.mk")
     
     # Tester files (referenced by the old directory name before it is renamed)
-    ,("tester/RT_format/RT_Format.el" ,"tester/RT_format/RT-formatter.el")
-    ,("tester/RT_format/RT_format.el" ,"tester/RT_format/RT-formatter_alt.el")
-    ,("tester/RT_format/RTfmt" ,"tester/RT_format/RT-formatter")
-    ,("tester/RT_format/RTfmt.el" ,"tester/RT_format/RT-formatter_script.el")
-    ,("tester/RT_format/RTfmt_with_compare" ,"tester/RT_format/RT-formatter_with-compare")
-    ,("tester/RT_format/RTfmt_with_compare.el" ,"tester/RT_format/RT-formatter_with-compare.el")
-    ,("tester/RT_format/test_0_data.c" ,"tester/RT_format/data_test-0.c")
-    ,("tester/RT_format/test_1_data.py" ,"tester/RT_format/data_test-1.py")
+    ,("tester/RT-formatter/RT-formatter.el" ,"tester/RT-formatter/RT-formatter.el")
+    ,("tester/RT-formatter/RT-formatter.el" ,"tester/RT-formatter/RT-formatter_alt.el")
+    ,("tester/RT-formatter/RTfmt" ,"tester/RT-formatter/RT-formatter")
+    ,("tester/RT-formatter/RT-formatter.el" ,"tester/RT-formatter/RT-formatter_script.el")
+    ,("tester/RT-formatter/RTfmt_with_compare" ,"tester/RT-formatter/RT-formatter_with-compare")
+    ,("tester/RT-formatter/RTfmt_with_compare.el" ,"tester/RT-formatter/RT-formatter_with-compare.el")
+    ,("tester/RT-formatter/data_test-0.c" ,"tester/RT-formatter/data_test-0.c")
+    ,("tester/RT-formatter/data_test-1.py" ,"tester/RT-formatter/data_test-1.py")
     
     # Directories
-    ,("shared/third_party" ,"shared/linked-project")
-    ,("tester/RT_format" ,"tester/RT-formatter")
+    ,("shared/linked-project" ,"shared/linked-project")
+    ,("tester/RT-formatter" ,"tester/RT-formatter")
   ]
 
   for src ,dst in substitutions:

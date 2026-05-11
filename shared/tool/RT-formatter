@@ -6,7 +6,7 @@ RTfmt — Reasoning Technology code formatter (Predicate Tokenizer)
 Commands:
   RTfmt write [--lisp] <file ...>      Format files in place (rewrite originals)
   RTfmt copy  [--lisp] <file ...>      Save backups as <file>~ then format originals
-  RTfmt pipe  [--lisp]                 Read from stdin, write to stdout
+  RT-formatter pipe  [--lisp]                 Read from stdin, write to stdout
   RTfmt self_test                      Run built-in tests
   RTfmt version                        Show tool version
   RTfmt help | --help                  Show usage

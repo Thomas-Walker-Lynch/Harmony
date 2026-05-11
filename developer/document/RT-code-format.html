@@ -218,16 +218,16 @@
       </p>
       <ul>
         <li><RT-code>RTfmt write &lt;file...&gt;</RT-code> : Formats files in place. It performs a content comparison before writing, leaving the file modification timestamp untouched if the file is already compliant.</li>
-        <li><RT-code>RTfmt pipe</RT-code> : Reads from standard input and writes to standard output, making it ideal for editor integration.</li>
+        <li><RT-code>RT-formatter pipe</RT-code> : Reads from standard input and writes to standard output, making it ideal for editor integration.</li>
         <li><RT-code>--lisp</RT-code> : A flag that instructs the formatter to skip the outermost enclosure padding rule, honoring the Lisp function call exception.</li>
       </ul>
 
       <h2>Emacs integration</h2>
       <p>
-        For Emacs users, the <RT-code>RTfmt.el</RT-code> file provides the <RT-code>RTfmt-buffer</RT-code> interactive command.
+        For Emacs users, the <RT-code>RT-formatter.el</RT-code> file provides the <RT-code>RT-formatter-buffer</RT-code> interactive command.
       </p>
       <p>
-        This wrapper passes the current buffer through the <RT-code>RTfmt pipe</RT-code> command. It automatically detects Lisp-derived modes to append the <RT-code>--lisp</RT-code> flag. Furthermore, it utilizes a non-destructive buffer replacement strategy. This ensures that a programmer's cursor position, selection marks, and window scroll state remain anchored exactly where they were before the formatting occurred.
+        This wrapper passes the current buffer through the <RT-code>RT-formatter pipe</RT-code> command. It automatically detects Lisp-derived modes to append the <RT-code>--lisp</RT-code> flag. Furthermore, it utilizes a non-destructive buffer replacement strategy. This ensures that a programmer's cursor position, selection marks, and window scroll state remain anchored exactly where they were before the formatting occurred.
       </p>
 
       <h1>Exercises</h1>

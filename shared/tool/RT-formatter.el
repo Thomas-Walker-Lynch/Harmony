@@ -1,7 +1,7 @@
-(defun RTfmt0-buffer ()
+(defun RT-formatter-buffer ()
   "Format the current buffer using RTfmt0."
   (interactive)
-  (if (not (executable-find "RTfmt0"))
+  (if (not (executable-find "RT-formatter"))
       (message "Error: RTfmt0 executable not found in PATH.")
     (let ((temp-buffer (generate-new-buffer " *RTfmt0*"))
           (args (list "pipe")))
@@ -10,13 +10,13 @@
       (unwind-protect
           (let ((exit-code (apply #'call-process-region
                                   (point-min) (point-max)
-                                  "RTfmt0"
+                                  "RT-formatter"
                                   nil temp-buffer nil
                                   args)))
             (if (zerop exit-code)
                 (progn
                   ;; Applies a non-destructive diff, preserving point and markers natively
                   (replace-buffer-contents temp-buffer)
-                  (message "RTfmt0 formatting successful."))
-              (message "RTfmt0 failed with exit code %s. Buffer unchanged." exit-code)))
+                  (message "RT-formatter formatting successful."))
+              (message "RT-formatter failed with exit code %s. Buffer unchanged." exit-code)))
         (kill-buffer temp-buffer)))))

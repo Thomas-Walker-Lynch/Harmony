@@ -38,7 +38,7 @@ umask 0077
 # Project wide Tool setup
 #
 
-export VIRTUAL_ENV="$REPO_HOME/shared/third_party/Python"
+export VIRTUAL_ENV="$REPO_HOME/shared/linked-project/Python"
 export PYTHON_HOME="$VIRTUAL_ENV"
 unset PYTHONHOME
 

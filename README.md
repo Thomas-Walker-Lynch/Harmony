@@ -31,8 +31,8 @@ git clone -b release_v1 https://github.com/Thomas-Walker-Lynch/RT-style-JS_publi
 Then, from the root of your new project repository, link it:
 
 ```bash
-cd shared/third_party
+cd shared/linked-project
 ln -s ../../../RT-style-JS_public RT-style-JS_public
 ```
 
-Find an introductory document at `document/Introduction_to_Harmony.html'. After the style library is installed, clicking on it in file navigator should open it in a browser.
+Find an introductory document at `document/introduction_Harmony.html'. After the style library is installed, clicking on it in file navigator should open it in a browser.
