@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# developer/tool/make
+
+set -euo pipefail
+CMD="${1:-all}"
+
+# The GNU Make orchestrator expects C_SOURCE_DIR to point to the raw directory
+export C_SOURCE_DIR="authored/$NAMESPACE_DIR"
+export KMOD_SOURCE_DIR="authored/$NAMESPACE_DIR"
+
+/bin/make -f tool/build_component/makefile "$CMD"
