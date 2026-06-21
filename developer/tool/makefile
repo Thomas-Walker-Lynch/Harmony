@@ -3,7 +3,6 @@
 .EXPORT_ALL_VARIABLES:
 
 RT_MAKEFILE_DP := $(REPO_HOME)/shared/tool/makefile
-include $(RT_MAKEFILE_DP)/Harmony.mk
 
 # If a namespace is provided, update the source directory
 ifneq ($(NAMESPACE),)
