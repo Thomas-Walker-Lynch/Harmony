@@ -20,7 +20,7 @@
 
       <h1>Prerequisites</h1>
       <p>
-        A release requires a tested promotion candidate. The developer compiles the code and promotes it to the <RT-code>consumer/made</RT-code> directory. The tester validates the candidate. The product manager gives the order to release.
+        A developer works in the developer branch of the project, and makes use of the <RT-code>build</RT-code> and <RT-code>promote</RT> tools to stage release candidates into the <RT-code>$REPO_HOME/consumer</RT-code> directory. The <RT-code>tester</RT-code> then validates the release candidate. This constitutes a cycle of work, developing, promoting candidates, testing, and then further developing. Once the project manager agrees this cycle is complete, the release flow moves to the next step.
       </p>
 
       <h1>Create the release branch</h1>
