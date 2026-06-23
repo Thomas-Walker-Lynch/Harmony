@@ -1,4 +1,13 @@
-// RT-style.js (External consumer project router)
+/*
+  We have four scenarios
+
+  immediate - used in the RT-Style distribution itself (authored, consummer, staged)
+  direct - used in the RT-Style project itself, but not in the distribution
+  indirect - the version all Harmony projects use
+  URL_only - always pulls style through a URL, a webserver must be present
+  
+*/
+
 window.RT = window.RT || {};
 
 // --- Configuration ---
@@ -6,7 +15,7 @@ window.RT = window.RT || {};
 window.RT.project_name = "Harmony"; 
 
 // Fallback URL when served over a network where the project root is not in the URI.
-window.RT.server_url = "http://localhost:8000/shared/linked-project/RT-style/consumer/made/Manuscript";
+window.RT.server_url = "http://localhost:8000/shared/linked-project/RT-Style/made/Manuscript";
 
 (function() {
   let style_path = window.RT.server_url;
@@ -19,9 +28,12 @@ window.RT.server_url = "http://localhost:8000/shared/linked-project/RT-style/con
       // substring(0, stop) extracts up to the project name, leaving off the trailing slash.
       // We append the explicit forward slash before navigating into the shared boundary.
       const absolute_project_root = path.substring(0, project_root_index + window.RT.project_name.length + 1);
-      style_path = absolute_project_root + "/shared/linked-project/RT-style/consumer/made/Manuscript";
+      
+      // The symlink 'RT-Style' already drops us inside the 'consumer/' directory, 
+      // so we proceed directly to 'made/Manuscript'.
+      style_path = absolute_project_root + "/shared/linked-project/RT-Style/made/Manuscript";
     } else {
-      console.warn("RT-style: Cannot locate project root '/" + window.RT.project_name + "/' in URI. Falling back to server_url.");
+      console.warn("RT-Style: Cannot locate project root '/" + window.RT.project_name + "/' in URI. Falling back to server_url.");
     }
   }
   
