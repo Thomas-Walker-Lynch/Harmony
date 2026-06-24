@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
 # -*- mode: python; coding: utf-8; python-indent-offset: 2; indent-tabs-mode: nil -*-
 
-import sys ,os ,filecmp ,stat
+import sys ,os ,filecmp ,stat ,subprocess
 from pathlib import Path
 
 def get_project_name(repo_path: Path) -> str:
   return repo_path.resolve().name
+
+def get_git_branch(repo_path: Path) -> str:
+  try:
+    result = subprocess.run(
+      ["git" ,"-C" ,str(repo_path) ,"branch" ,"--show-current"],
+      capture_output=True ,text=True ,check=True
+    )
+    branch = result.stdout.strip()
+    return branch if branch else "unknown_branch"
+  except (subprocess.CalledProcessError ,FileNotFoundError):
+    return "unknown_branch"
 
 def format_perms(mode: int) -> str:
   # Extract the 9-character permission string (e.g., rwxr-xr-x), dropping the leading file type char
@@ -27,6 +38,8 @@ def CLI(argv=None) -> int:
     return 1
 
   project_name = get_project_name(project_dir)
+  harmony_branch = get_git_branch(harmony_dir)
+  project_branch = get_git_branch(project_dir)
   
   # Data structures for the output sections
   opus_warnings = []
@@ -133,7 +146,10 @@ def CLI(argv=None) -> int:
           perms_only_changes.append(display_str)
 
   # --- Output Generation ---
-  print(f"\nSkeleton Audit: Harmony vs {project_name}")
+  print("Skeleton Audit:")
+  print(f"    Harmony {harmony_branch}")
+  print("    vs")
+  print(f"    {project_name} {project_branch}")
   print("=" * 60)
 
   print("\n1. 0pus File Audit")
@@ -197,3 +213,4 @@ def CLI(argv=None) -> int:
 
 if __name__ == "__main__":
   sys.exit(CLI())
+
