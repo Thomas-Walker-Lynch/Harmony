@@ -12,7 +12,7 @@ The script executes the following sequential lifecycle:
   2. Safely extracts a clean copy of all Git-tracked files using an archive stream.
   3. Renames the boilerplate 0pus_Harmony anchor file to reflect the new project.
   4. Injects an initial version tracking entry into the shared configuration space.
-  5. Initializes a fresh Git repository bound to the core_developer_branch.
+  5. Initializes a fresh Git repository bound to the core-developer_branch.
   6. Stages and commits the pristine skeleton infrastructure as a baseline.
   7. Maps any upstream remote network targets passed via CLI parameters.
 """
@@ -29,7 +29,7 @@ def get_Z_date() -> str:
     return "1970-01-01"
 
 def work(project_name: str ,remotes: list[str]) -> int:
-  """Orchestrates the structural assembly of the new skeleton instance."""
+  """Orchestrates the assembly of the new skeleton instance."""
   repo_home = os.environ.get("REPO_HOME")
   if not repo_home:
     print("Error: REPO_HOME is not set. A person must run this from within a sourced role environment." ,file=sys.stderr)
@@ -62,7 +62,7 @@ def work(project_name: str ,remotes: list[str]) -> int:
   if opus_src.exists():
     opus_src.rename(opus_dst)
 
-  # Record the structural lineage in the shared version history
+  # Record the lineage in the shared version history
   version_file = dest_path / "shared" / "tool" / "version"
   date_str = get_Z_date()
   version_line = f"echo \"{dest_path.name} v0.1 {date_str}\"\n"
@@ -76,11 +76,11 @@ def work(project_name: str ,remotes: list[str]) -> int:
 
   # Initialize the pristine Git environment tracking system
   print("Initializing git repository...")
-  subprocess.run(["git" ,"init" ,"-b" ,"core_developer_branch"] ,cwd=str(dest_path) ,check=True)
+  subprocess.run(["git" ,"init" ,"-b" ,"core-developer_branch"] ,cwd=str(dest_path) ,check=True)
   subprocess.run(["git" ,"add" ,"."] ,cwd=str(dest_path) ,check=True)
   subprocess.run(["git" ,"commit" ,"-m" ,f"Initial commit of {dest_path.name} from Harmony skeleton"] ,cwd=str(dest_path) ,check=True)
 
-  # Configure structural tracking addresses for upstreams
+  # Configure tracking addresses for upstreams
   for idx ,remote_url in enumerate(remotes):
     remote_name = f"remote_{idx}"
     if "github.com" in remote_url: 
