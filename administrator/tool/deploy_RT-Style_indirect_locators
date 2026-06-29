@@ -5,7 +5,7 @@ import stat
 import shutil
 from pathlib import Path
 
-def deploy_RT_Style_indirect_locators(locator_dir_path):
+def deploy_RT_Manuscript_indirect_locators(locator_dir_path):
   locator_dir = Path(locator_dir_path)
   if not locator_dir.is_dir():
     print(f"Error: Locator directory not found at {locator_dir_path}")
@@ -36,7 +36,7 @@ def deploy_RT_Style_indirect_locators(locator_dir_path):
         try:
           with open(file_path, "r", encoding="utf-8") as f:
             for line in f:
-              if "RT-Style_locator.js" in line:
+              if "RT-Manuscript_locator.js" in line:
                 needs_locator = True
                 break
               if "</head>" in line.lower():
@@ -47,7 +47,7 @@ def deploy_RT_Style_indirect_locators(locator_dir_path):
           print(f"Warning: Could not read {file_path}: {e}")
 
     if needs_locator:
-      target_file = current_path / "RT-Style_locator.js"
+      target_file = current_path / "RT-Manuscript_locator.js"
       
       # Eliminate permission denial on read-only artifacts
       if target_file.exists():
@@ -60,7 +60,7 @@ def deploy_RT_Style_indirect_locators(locator_dir_path):
 
 if __name__ == "__main__":
   if len(sys.argv) != 2:
-    print("Usage: python3 deploy_RT_Style_indirect_locators.py <path_to_Locator_directory>")
+    print("Usage: python3 deploy_RT_Manuscript_indirect_locators.py <path_to_Locator_directory>")
     sys.exit(1)
     
-  deploy_RT_Style_indirect_locators(sys.argv[1])
+  deploy_RT_Manuscript_indirect_locators(sys.argv[1])
