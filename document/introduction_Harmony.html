@@ -260,7 +260,7 @@
       </ul>
 
       <p>
-        Currently, our developers write documents directly in HTML using the RT semantic tags. See the <RT·code>RT·Style</RT·code> project and the documentation there. A common approach is to copy another document and the <RT·code>setup.js</RT·code> file, then to type over the top of that other document.
+        Currently, our developers write documents directly in HTML using the RT semantic tags. See the RT-Style project and the documentation there. A common approach is to copy an existing document while keeping the RT-Style script block in the header intact, then and typing over the contents.
       </p>
 
       <h2>Untracked directories</h2>
@@ -290,74 +290,82 @@
       <h1>The Harmony directory tree</h1>
 
       <RT·code>
-      2026-06-23 13:41:45 Z [Harmony:administrator] Thomas_developer@StanleyPark
+      2026-10-09 09:22:21 Z [Harmony:administrator] Thomas_developer@Yangming
       §/home/Thomas/subu_data/developer/project§
       > tree Harmony
       Harmony
       ├── 0pus_Harmony
       ├── administrator
-      │ ├── authored
-      │ ├── document
-      │ │ └── setup.js
-      │ └── tool
-      │   ├── archive
-      │   └── setup
+      │   ├── authored
+      │   ├── document
+      │   │   ├── how-to_release.html
+      │   │   ├── install_generic.org
+      │   │   └── install_Python.org
+      │   └── tool
+      │       ├── archive
+      │       ├── html_to_v31
+      │       ├── new-project
+      │       ├── RT-Style_header_v5_to_v6
+      │       ├── setup
+      │       └── skeleton_diff
       ├── consumer
-      │ └── .gitignore
+      │   └── ExampleGreet
+      │       ├── hello
+      │       └── libHarmony.a
       ├── developer
-      │ ├── authored
-      │ │ └── hello.CLI.c
-      │ ├── document
-      │ │ ├── 02_RT_Code_Format.html
-      │ │ ├── 03_Naming_and_Directory_Conventions.html
-      │ │ ├── 04_Language_Addenda.html
-      │ │ └── setup.js
-      │ ├── experiment
-      │ ├── made
-      │ ├── scratchpad
-      │ └── tool
-      │   ├── do_all
-      │   ├── build
-      │   ├── makefile
-      │   ├── promote
-      │   └── setup
+      │   ├── authored
+      │   │   └── ExampleGreet.make
+      │   │       ├── Greeter.lib.c
+      │   │       ├── hello.CLI.c
+      │   │       └── Math.lib.c
+      │   ├── document
+      │   │   ├── naming_file-and-directory.html
+      │   │   └── single-file_C-module-and-namespace.html
+      │   ├── experiment
+      │   ├── scratchpad
+      │   └── tool
+      │       ├── build
+      │       ├── build_component
+      │       │   ├── copy
+      │       │   ├── make
+      │       │   ├── makefile
+      │       │   └── sync_engine.py
+      │       ├── promote
+      │       └── setup
       ├── document
-      │ ├── introduction_Harmony.html
-      │ ├── role-and-workflow_product-development.html
-      │ └── setup.js
+      │   ├── introduction_Harmony.html
+      │   ├── role-and-workflow_product-development.html
+      │   ├── role-and-workflow_product-maintenance.html
+      │   └── writing_tool-script.html
       ├── LICENSE
       ├── README.md
       ├── scratchpad
       ├── setup
       ├── shared
-      │ ├── authored
-      │ ├── document
-      │ │ ├── install_generic.org
-      │ │ ├── install_Python.org
-      │ │ └── setup.js
-      │ ├── made
-      │ ├── dictionary_style-directory.js
-      │ ├── linked-project
-      │ │ ├── project -> ../../../
-      │ │ ├── Python-3.12.3 -> project/Python-3.12.3
-      │ │ ├── Python.init
-      │ │ ├── RT·Style -> project/RT·Style/consumer
-      │ │ └── RT·Style.init
-      │ └── tool
-      │   ├── scratchpad
-      │   ├── setup
-      │   ├── style
-      │   └── version
+      │   ├── authored
+      │   ├── document
+      │   ├── linked-project
+      │   │   ├── project -> ../../../
+      │   │   ├── Python-3.12.3 -> project/Python-3.12.3
+      │   │   └── Python.init
+      │   └── tool
+      │       ├── env_to_emacs
+      │       ├── makefile
+      │       │   ├── Harmony.mk
+      │       │   ├── RT_global.h
+      │       │   └── target_kernel-module.mk
+      │       ├── PATH.sh
+      │       ├── RT-formatter
+      │       ├── RT-formatter.el
+      │       ├── scratchpad
+      │       ├── setup
+      │       └── version
       └── tester
           ├── authored
-          │ └── test_routine.sh
-          ├── RT_Format
-          │ ├── RT_Format
-          │ ├── RT·formatter.el
-          │ ├── data_test-0.c
-          │ └── data_test-1.py
           └── tool
               └── setup
+
+      28 directories, 43 files
       </RT·code>
 
     </RT·article>

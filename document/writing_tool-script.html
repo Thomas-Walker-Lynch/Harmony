@@ -150,7 +150,7 @@
       </p>
 
       <p>
-        A tool does not follow symbolic links to directories. A Harmony project has <RT·code>shared/linked-project/project</RT·code> pointing to <RT·code>../../../</RT·code>, the directory holding all the projects. Following it would send the walk into every neighboring project and around the loop back into this one. In Python, <RT·code>os.walk</RT·code> does not follow such links unless given <RT·code>followlinks=True</RT·code>, so leave that argument out.
+        A tool does not follow symbolic links to directories. A Harmony project has <RT·code>shared/project-dependency/project</RT·code> pointing to <RT·code>../../../</RT·code>, the directory holding all the projects. Following it would send the walk into every neighboring project and around the loop back into this one. In Python, <RT·code>os.walk</RT·code> does not follow such links unless given <RT·code>followlinks=True</RT·code>, so leave that argument out.
       </p>
 
       <h1>Paths</h1>

@@ -70,7 +70,7 @@ umask 0077
   clean_path
 
   # Plugin Sourcing: Dynamically load all the linked project configurations
-  for init_file in "$REPO_HOME/shared/linked-project/"*.init; do
+  for init_file in "$REPO_HOME/shared/project-dependency/"*.init; do
     if [[ -f "$init_file" ]]; then
       source "$init_file"
     fi
