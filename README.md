@@ -19,20 +19,8 @@ To create a Harmony-based project, the project administrator performs these step
 
 ## Viewing the Documentation
 
-To view the project documentation with its intended formatting, a person must provide the RT style library.  One way to do this is to clone the styling repository side-by-side with your new project directory, and then to link it into the third-party directory.
+The documents are HTML written against the RT-Style library. With nothing set up, a document loads RT-Style from https://style.ReasoningTechnology.com, so it formats whenever the machine is online.
 
-From the parent directory of your new project, clone the required style repository:
+To read offline, or against a local copy of RT-Style, put a built RT-Style project on the machine and open its consumer/Manuscript/setup.html once in Chrome, from disk. Chrome then loads RT-Style from that copy for every local document. Opening another copy of setup.html, then reloading the document, will switch to using that other copy.
 
-```bash
-cd ..
-git clone -b release_v1 https://github.com/Thomas-Walker-Lynch/RT-style-JS_public
-```
-
-Then, from the root of your new project repository, link it:
-
-```bash
-cd shared/linked-project
-ln -s ../../../RT-style-JS_public RT-style-JS_public
-```
-
-Find an introductory document at `document/introduction_Harmony.html'. After the style library is installed, clicking on it in file navigator should open it in a browser.
+Find an introductory document at `document/introduction_Harmony.html`.

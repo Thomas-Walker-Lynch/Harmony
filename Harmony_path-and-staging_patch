@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+# -*- mode: python; coding: utf-8; python-indent-offset: 2; indent-tabs-mode: nil -*-
+
+"""
+Harmony_path-and-staging_patch
+
+One-time patch for the Harmony skeleton. Run it from the top directory of
+the project, after checkpointing with git.
+
+  1. shared/tool/setup
+     Sources the project dependency .init files first, then adds shared/tool,
+     shared/made, shared/authored, so the search order becomes
+     shared/authored, shared/made, shared/tool, project dependencies.
+  2. setup
+     Adds the role's tool directory after the shared setup has run, so it is
+     searched before everything else. Removes the earlier PATH injection,
+     which put it behind the shared directories.
+  3. developer/tool/build_component/copy
+     Stages into scratchpad/made/<namespace>, like the make component.
+  4. developer/tool/promote
+     Copies from scratchpad/made into consumer/, so build intermediates
+     such as scratchpad/build/object stay on the scratchpad. Its setup hint
+     now says ./setup developer.
+
+Every expected piece of text is checked before any file is written. If one
+is missing, the patch reports it and changes nothing.
+
+Usage: Harmony_path-and-staging_patch <command>
+  help | -h | --help   print this message (also printed when given no arguments)
+  preview              print what would change, change nothing
+  apply                make the changes
+"""
+
+import sys ,re
+from pathlib import Path
+
+EDITS = {
+  "shared/tool/setup": [
+    (
+'''# --------------------------------------------------------------------------------
+# PATH & Plugin Sourcing
+#   precedence: last defined, first discovered
+
+  PATH="$REPO_HOME/shared/authored:$PATH"
+  PATH="$REPO_HOME/shared/made:$PATH"
+  PATH="$REPO_HOME/shared/tool:$PATH"
+
+  # Remove duplicates
+  clean_path() {
+    PATH=$(echo ":$PATH" | awk -v RS=: -v ORS=: '!seen[$0]++' | sed 's/^://; s/:$//')
+  }
+  clean_path
+
+  # Plugin Sourcing: Dynamically load all the linked project configurations
+  for init_file in "$REPO_HOME/shared/project-dependency/"*.init; do
+    if [[ -f "$init_file" ]]; then
+      source "$init_file"
+    fi
+  done
+'''
+    ,
+'''# --------------------------------------------------------------------------------
+# PATH & Plugin Sourcing
+#   Each addition goes to the front, so the last added is searched first.
+#   Resulting search order, most specific first:
+#     shared/authored, shared/made, shared/tool, project dependencies, the rest.
+#   The top-level setup then puts the role's tool directory in front of these.
+
+  # Project dependencies: source each .init file. Each prepends its own entries.
+  for init_file in "$REPO_HOME/shared/project-dependency/"*.init; do
+    if [[ -f "$init_file" ]]; then
+      source "$init_file"
+    fi
+  done
+
+  PATH="$REPO_HOME/shared/tool:$PATH"
+  PATH="$REPO_HOME/shared/made:$PATH"
+  PATH="$REPO_HOME/shared/authored:$PATH"
+
+  # Remove duplicates, keeping the first occurrence
+  clean_path() {
+    PATH=$(echo ":$PATH" | awk -v RS=: -v ORS=: '!seen[$0]++' | sed 's/^://; s/:$//')
+  }
+  clean_path
+'''
+    )
+  ]
+  ,"setup": [
+    (
+'''    # Python-domain logic: PATH injection
+    path_parts = env.get("PATH", "").split(os.pathsep)
+    if tool_dir not in path_parts:
+        env["PATH"] = f"{tool_dir}{os.pathsep}{env.get('PATH', '')}"
+
+'''
+    ,
+''
+    )
+    ,(
+"""        'if [[ -f "shared/authored/setup" ]]; then source "shared/authored/setup"; fi',
+"""
+    ,
+"""        'if [[ -f "shared/authored/setup" ]]; then source "shared/authored/setup"; fi',
+        '# the role tool directory is searched before everything the shared setup added',
+        f'PATH="{tool_dir}:$PATH"; export PATH',
+"""
+    )
+  ]
+  ,"developer/tool/build_component/copy": [
+    ('all     Stages files from authored to scratchpad.'
+     ,'all     Stages files from authored to scratchpad/made/<namespace>.')
+    ,('clean   Removes the specified namespace from scratchpad.'
+     ,'clean   Removes scratchpad/made/<namespace>.')
+    ,('''  src_root = os.path.join("authored", namespace_dir)
+  dst_root = os.path.join("scratchpad", namespace)'''
+     ,'''  src_root = os.path.join("authored", namespace_dir)
+  dst_root = os.path.join("scratchpad", "made", namespace)''')
+    ,('''  dst_root = os.path.join("scratchpad", namespace)
+  if os.path.exists(dst_root):'''
+     ,'''  dst_root = os.path.join("scratchpad", "made", namespace)
+  if os.path.exists(dst_root):''')
+  ]
+  ,"developer/tool/promote": [
+    ('write       Writes promoted files from scratchpad into consumer. Only updates newer files.'
+     ,'write       Copies what is staged in scratchpad/made into consumer. Only updates newer files.')
+    ,('diff        List missing, orphaned, or out of sync files between scratchpad and consumer.'
+     ,'diff        List missing, orphaned, or out of sync files between scratchpad/made and consumer.')
+    ,('"Enter the project with:  . setup developer\\n"'
+     ,'"Enter the developer role with:  ./setup developer\\n"')
+    ,('''  ensure_dir(dst_root, DEFAULT_DIR_MODE, dry=dry)
+  src_root = dpath("scratchpad")'''
+     ,'''  ensure_dir(dst_root, DEFAULT_DIR_MODE, dry=dry)
+  src_root = dpath("scratchpad", "made")''')
+    ,('''  dst_root = cpath()
+  src_root = dpath("scratchpad")
+
+  src_files = set()'''
+     ,'''  dst_root = cpath()
+  src_root = dpath("scratchpad", "made")
+
+  src_files = set()''')
+    ,('Orphaned in consumer (missing in scratchpad)'
+     ,'Orphaned in consumer (missing in scratchpad/made)')
+    ,('newer in scratchpad)'
+     ,'newer in scratchpad/made)')
+    ,('Consumer matches developer scratchpad.'
+     ,'Consumer matches developer scratchpad/made.')
+  ]
+}
+
+def print_help() -> int:
+  print(__doc__.strip())
+  return 0
+
+def tolerant(old: str):
+  """A pattern for old that ignores spaces and tabs at the ends of lines."""
+  lines = old.split("\n")
+  last = len(lines) - 1
+  return re.compile("\n".join(
+    re.escape(l.rstrip(" \t")) + ("" if i == last and l == "" else "[ \t]*")
+    for i ,l in enumerate(lines)
+  ))
+
+def plan(root: Path):
+  """Returns (new_texts ,already ,problems). new_texts maps a path to its new
+  text; already lists the files that are already patched."""
+  new_texts = {}
+  already = []
+  problems = []
+  for rel ,edits in EDITS.items():
+    f = root / rel
+    if not f.is_file():
+      problems.append(f"{rel}: file not found")
+      continue
+    text = f.read_text(encoding="utf-8")
+    applied = 0
+    for n ,(old ,new) in enumerate(edits ,1):
+      # The finished form is checked first: an edit's old text can lie
+      # inside its new text, and would otherwise be applied twice.
+      if new != "" and len(tolerant(new).findall(text)) == 1:
+        applied += 1
+        continue
+      count = len(tolerant(old).findall(text))
+      if count == 1:
+        text = tolerant(old).sub(lambda m: new ,text)
+        continue
+      if new == "" and count == 0:
+        applied += 1
+        continue
+      problems.append(f"{rel}: edit {n}: expected text found {count} times, not once")
+    if applied == len(edits):
+      already.append(rel)
+    elif applied:
+      problems.append(f"{rel}: partly patched ({applied} of {len(edits)} edits already present)")
+    else:
+      new_texts[rel] = text
+  return new_texts ,already ,problems
+
+def work(root: Path ,preview: bool) -> int:
+  print(f"Harmony_path-and-staging_patch {'preview' if preview else 'apply'}   in {root}")
+  new_texts ,already ,problems = plan(root)
+  if problems:
+    for p in problems: print(f"  error           {p}")
+    print("Nothing was changed.")
+    return 1
+  for rel in already:
+    print(f"  already patched {rel}")
+  for rel ,text in new_texts.items():
+    f = root / rel
+    if preview:
+      print(f"  would change    {rel}  ({len(EDITS[rel])} edits)")
+    else:
+      mode = f.stat().st_mode
+      f.write_text(text ,encoding="utf-8")
+      f.chmod(mode)
+      print(f"  changed         {rel}  ({len(EDITS[rel])} edits)")
+  if preview: print("preview only: nothing was changed")
+  return 0
+
+def CLI(argv=None) -> int:
+  if argv is None: argv = sys.argv[1:]
+  if not argv or argv[0] in ("help" ,"-h" ,"--help"): return print_help()
+  if len(argv) != 1 or argv[0] not in ("preview" ,"apply"):
+    print(f"Error: unknown command '{' '.join(argv)}'.\n" ,file=sys.stderr)
+    print_help()
+    return 1
+  root = Path.cwd()
+  if not (root / "shared" / "tool" / "setup").is_file():
+    print("Error: run this from the top directory of the project." ,file=sys.stderr)
+    return 1
+  return work(root ,argv[0] == "preview")
+
+if __name__ == "__main__":
+  sys.exit(CLI())
