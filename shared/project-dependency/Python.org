@@ -14,6 +14,8 @@ sudo zypper install gcc make sqlite3-devel libopenssl-devel libffi-devel zlib-de
   readline-devel ncurses-devel xz-devel libbz2-devel gdbm-devel tk-devel libuuid-devel
 #+end_src
 
+zlib-ng-compat-devel serves in place of zlib-devel, and the two conflict; if zypper reports that conflict, keep the one already installed.
+
 tk-devel gives the tkinter module, which the window programs use.
 
 * 2. Download and Extract
@@ -30,14 +32,18 @@ cd Python-3.12.3
 Compile the Python binaries in place. Setting the installation prefix to the current directory isolates the build.
 
 #+begin_src bash
-./configure --prefix="$(pwd)" --enable-optimizations
+CONFIG_SITE= ./configure --prefix="$(pwd)" --libdir="$(pwd)/lib" --enable-optimizations
 make -j8 2>&1 | tee build.log
 make install
 #+end_src
 
+Everything installs inside this directory; nothing is written to the system.
+
+CONFIG_SITE= and --libdir keep the machine's own defaults out of the build, so the recipe gives the same layout on every Linux. Some distributions, openSUSE and Fedora among them, name a site file in CONFIG_SITE that sets the library directory to lib64 for every configure script. Python then installs its compiled modules under lib64 while the interpreter looks for them under lib, and every import of a compiled module, such as ssl, fails.
+
 The build is static: the interpreter is one program, with no separate libpython3.12.so to find when it starts. A build with --enable-shared records the absolute path of its library directory in the program, and stops working when the directory moves. C extension modules, such as those pip installs, work with the static build.
 
-Near the end of build.log, make lists any optional modules it could not build, under "The necessary bits to build these optional modules were not found". The list should be empty; if it is not, install the missing development library and build again.
+Near the end of build.log, make lists any optional modules it could not build, under "The necessary bits to build these optional modules were not found". nis, an obsolete network directory service, and _curses_panel may appear there; the project uses neither. For any other module listed, install the missing development library and build again.
 
 * 4. Check the build
 
