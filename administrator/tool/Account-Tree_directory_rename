@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+# -*- mode: python; coding: utf-8; python-indent-offset: 2; indent-tabs-mode: nil -*-
+
+"""
+Account-Tree_directory_rename
+
+Give the directories Account-Tree makes on systems and on storage the
+hyphenated name, in the project's code and documents. Run it after
+project_rename, in the directory that holds the projects, such as ~/project;
+it acts on ./Account-Tree.
+
+  <storage root>/home/AccountTree   becomes   <storage root>/home/Account-Tree
+  /var/lib/AccountTree              becomes   /var/lib/Account-Tree
+  /run/AccountTree                  becomes   /run/Account-Tree
+  /usr/local/lib/AccountTree        becomes   /usr/local/lib/Account-Tree
+
+The name reserved for accounts follows the tree dir, since /home/<name> would
+collide with it. The messages, window titles and unit descriptions that name
+Account-Tree, prose a person reads and that nothing keeps, take the
+hyphenated name too; a unit file whose description changes is written again
+by the next system configure, which still recognizes it by its mark. "consumer/AccountTree" becomes consumer/Account_Tree, the
+promoted namespace. The other names Account-Tree gives things on systems,
+the unit names, the udev rule file, the storage device names, the mark on
+the files it writes, the application id, the temporary file suffix and the
+string the database hash begins from, are names other things depend on, and
+are left; the lines still naming AccountTree are listed
+at the end.
+
+Only exact strings are changed. Each code constant names its directory once
+and everything else derives from it, so the program follows the constants.
+Existing systems and storage are moved by hand, under root, with every
+storage unplugged: the directories are renamed with mv, and the program is
+installed again. This tool changes no system.
+
+Usage: Account-Tree_directory_rename <command>
+       Account-Tree_directory_rename preview <command>
+
+  help | -h | --help   print this message (also printed when given no arguments)
+  project              act on ./Account-Tree
+  preview <command>    print the log of what <command> would do, change nothing
+"""
+
+import sys ,os ,subprocess
+from pathlib import Path
+
+PROJECT = "Account-Tree"
+
+PAIR_LIST = [
+  ("/usr/local/lib/AccountTree" ,"/usr/local/lib/Account-Tree"),
+  ("/var/lib/AccountTree" ,"/var/lib/Account-Tree"),
+  ("/run/AccountTree" ,"/run/Account-Tree"),
+  ("consumer/AccountTree" ,"consumer/Account_Tree"),
+  ("home/AccountTree" ,"home/Account-Tree"),
+  ('TREE_DIR_NAME = "AccountTree"' ,'TREE_DIR_NAME = "Account-Tree"'),
+  ("holds AccountTree's own files" ,"holds Account-Tree's own files"),
+  ("The name <RT·code>AccountTree</RT·code> is reserved" ,"The name <RT·code>Account-Tree</RT·code> is reserved"),
+  # messages, window titles and unit descriptions: prose a person reads, kept nowhere
+  ("AccountTree mounts a home only at" ,"Account-Tree mounts a home only at"),
+  ("it existed before AccountTree adopted it" ,"it existed before Account-Tree adopted it"),
+  ("is not AccountTree's" ,"is not Account-Tree's"),
+  ("unlocked outside AccountTree," ,"unlocked outside Account-Tree,"),
+  ("nothing AccountTree plugged in" ,"nothing Account-Tree plugged in"),
+  ("was not made by AccountTree;" ,"was not made by Account-Tree;"),
+  ("until AccountTree is\"" ,"until Account-Tree is\""),
+  ("AccountTree window: GTK 4" ,"Account-Tree window: GTK 4"),
+  ('set_title(f"AccountTree: ' ,'set_title(f"Account-Tree: '),
+  ("Description=AccountTree " ,"Description=Account-Tree "),
+  ('''        <li>Whether the names Account-Tree gives things on systems and on storage take the hyphenated form: the tree dir <RT·code>home/Account-Tree</RT·code>, <RT·code>/var/lib/Account-Tree</RT·code>, <RT·code>/run/Account-Tree</RT·code>, <RT·code>/usr/local/lib/Account-Tree</RT·code>, the server's account <RT·code>AccountTree</RT·code>, the systemd units and udev rule, the names of unlocked storage devices, and the line that marks a file Account-Tree wrote. Each is on storage or installed systems already made, so a change to it needs a migration of what exists. Until it is decided they keep the form given here.</li>'''
+  ,'''        <li>Whether the names Account-Tree gives things on systems and on storage that are not directories take the hyphenated form: the server's account <RT·code>AccountTree</RT·code>, the systemd units and udev rule, the names of unlocked storage devices, the line that marks a file Account-Tree wrote, and the application id. Each is on installed systems already made, so a change to it needs a migration of what exists. Until it is decided they keep the form given here. The directories were renamed to the hyphenated form; the string the database hash begins from keeps <RT·code>AccountTree</RT·code>, since changing it would change the hash of every database already made.</li>'''),
+]
+
+
+def file_list(dirpa_root):
+  """The files git sees, tracked or not yet added. git runs without a shell."""
+  run = subprocess.run(["git" ,"-C" ,str(dirpa_root) ,"ls-files" ,"-z" ,"--cached" ,"--others" ,"--exclude-standard"]
+                       ,capture_output=True ,check=True)
+  rel_set = {Path(p) for p in run.stdout.decode("utf-8").split("\0") if p}
+  return sorted(rel for rel in rel_set if (dirpa_root / rel).is_file() and not (dirpa_root / rel).is_symlink())
+
+def read_text(fpath):
+  try:
+    data = fpath.read_bytes()
+    if b"\0" in data:
+      return None
+    return data.decode("utf-8")
+  except (UnicodeDecodeError ,OSError):
+    return None
+
+def convert(dirpa_root ,preview):
+  """Make the replacements. Returns (files edited, replacements, lines still naming AccountTree)."""
+  edited ,count ,remaining = 0 ,0 ,[]
+  # the pairs are applied in order, the open question's text after the paths it lists
+  for rel in file_list(dirpa_root):
+    fpath = dirpa_root / rel
+    text = read_text(fpath)
+    if text is None:
+      continue
+    new = text
+    n = 0
+    for old ,replacement in PAIR_LIST:
+      n += new.count(old)
+      new = new.replace(old ,replacement)
+    if n:
+      edited += 1
+      count += n
+      print(f"  {'would edit' if preview else 'edited':<16}{rel}  ({n} mention" + ("" if n == 1 else "s") + ")")
+      if not preview:
+        fpath.write_bytes(new.encode("utf-8"))
+    for number ,line in enumerate(new.split("\n") ,1):
+      if "AccountTree" in line:
+        remaining.append((rel ,number ,line.strip()))
+  return edited ,count ,remaining
+
+def print_help():
+  print(__doc__.strip())
+  return 0
+
+def CLI(argv=None):
+  if argv is None:
+    argv = sys.argv[1:]
+  if not argv or argv[0] in ("help" ,"-h" ,"--help"):
+    return print_help()
+  preview = argv[0] == "preview"
+  if preview:
+    argv = argv[1:]
+  if argv != ["project"]:
+    print(f"Error: expected the command 'project', given: {' '.join(argv) or 'nothing'}\n" ,file=sys.stderr)
+    print_help()
+    return 1
+  dirpa_root = Path.cwd() / PROJECT
+  if not (dirpa_root / ".git").exists():
+    print(f"Error: no project {dirpa_root}. Run project_rename first, then this, in the directory that holds the projects." ,file=sys.stderr)
+    return 1
+
+  print(f"Account-Tree_directory_rename {'preview ' if preview else ''}project   in {dirpa_root}")
+  edited ,count ,remaining = convert(dirpa_root ,preview)
+  print()
+  for rel ,number ,line in remaining:
+    print(f"  {'still names':<16}{rel}:{number}: {line[:120]}")
+  print()
+  print("summary:")
+  print(f"  {edited:4d}  files edited, {count} mentions changed")
+  print(f"  {len(remaining):4d}  lines still name AccountTree")
+  if preview:
+    print("preview only: nothing was changed.")
+  return 0
+
+if __name__ == "__main__":
+  sys.exit(CLI())

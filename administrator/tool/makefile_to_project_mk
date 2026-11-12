@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+# -*- mode: python; coding: utf-8; python-indent-offset: 2; indent-tabs-mode: nil -*-
+
+"""
+makefile_to_project_mk
+
+Rename the project's make settings file, developer/tool/build_component/makefile,
+to project.mk, and change the mentions of its path in the files that name it:
+Harmony.mk, which includes it, the build component's make script, and the
+file's own header. The file is only ever included by Harmony.mk, never run, so
+it takes the .mk extension of the other included makefiles. Its content is
+kept: a project that customized its settings keeps them.
+
+Run it in each project, Harmony included, before skeleton_update. A
+skeleton_update alone would add Harmony's starting project.mk beside the old
+file, and Harmony.mk would then read the starting settings, not the project's.
+
+The project must already have Harmony.mk version 9.0, the one that includes
+the settings file. Nothing is changed unless every file is as expected.
+
+Usage: makefile_to_project_mk <command>
+       makefile_to_project_mk preview <command>
+
+  help | -h | --help   print this message (also printed when given no arguments)
+  project              act on the project rooted at $REPO_HOME
+  preview <command>    print the log of what <command> would do, change nothing
+"""
+
+import sys ,os
+from pathlib import Path
+
+PATH_OLD = "tool/build_component/makefile"
+PATH_NEW = "tool/build_component/project.mk"
+
+# relative to $REPO_HOME
+SETTINGS_OLD = Path("developer") / PATH_OLD
+SETTINGS_NEW = Path("developer") / PATH_NEW
+HARMONY_MK   = Path("shared/tool/makefile/Harmony.mk")
+MAKE_SCRIPT  = Path("developer/tool/build_component/make")
+
+INCLUDE_OLD = b"include " + PATH_OLD.encode() + b"\n"
+INCLUDE_NEW = b"include " + PATH_NEW.encode() + b"\n"
+
+
+class Log:
+  def __init__(self ,preview):
+    self.preview = preview
+    self.count = {"renamed": 0 ,"edited": 0 ,"current": 0 ,"error": 0}
+
+  def line(self ,tag ,path ,note=""):
+    if self.preview:
+      tag = {"renamed": "would rename" ,"edited": "would edit"}.get(tag ,tag)
+    print(f"  {tag:<16}{path}" + (f"  ({note})" if note else ""))
+
+  def summary(self):
+    print()
+    print("summary:")
+    print(f"  {self.count['renamed']:4d}  settings file renamed to project.mk")
+    print(f"  {self.count['edited']:4d}  files edited")
+    print(f"  {self.count['current']:4d}  files already current")
+    if self.count["error"]:
+      print(f"  {self.count['error']:4d}  errors")
+    if self.preview:
+      print("preview only: nothing was changed.")
+
+
+def mention_count(data):
+  return data.count(PATH_OLD.encode())
+
+def problem_list(dirpa_root):
+  """
+  The reasons the project cannot be converted, an empty list when it can.
+  Checked before anything is changed, so a run changes all or nothing.
+  """
+  problem = []
+  old = (dirpa_root / SETTINGS_OLD).is_file()
+  new = (dirpa_root / SETTINGS_NEW).exists()
+  if old and new:
+    problem.append(f"{SETTINGS_OLD} and {SETTINGS_NEW} both exist; merge them by hand")
+  if not old and not new:
+    problem.append(f"no {SETTINGS_OLD} or {SETTINGS_NEW}")
+
+  harmony = dirpa_root / HARMONY_MK
+  if not harmony.is_file():
+    problem.append(f"no {HARMONY_MK}")
+  else:
+    data = harmony.read_bytes()
+    if INCLUDE_OLD not in data and INCLUDE_NEW not in data:
+      problem.append(f"{HARMONY_MK} does not include the settings file; it is older than version 9.0, update it from Harmony first")
+
+  if not (dirpa_root / MAKE_SCRIPT).is_file():
+    problem.append(f"no {MAKE_SCRIPT}")
+  return problem
+
+def edit(fpath ,rel ,log ,preview ,fpath_read=None):
+  """
+  Replace each mention of the old path in fpath with the new one, byte for
+  byte otherwise. fpath_read is where the content is read from when the file
+  has not been renamed yet, as in a preview.
+  """
+  data = (fpath_read or fpath).read_bytes()
+  n = mention_count(data)
+  if n == 0:
+    log.count["current"] += 1
+    return
+  log.line("edited" ,rel ,f"{n} mention" + ("" if n == 1 else "s"))
+  log.count["edited"] += 1
+  if not preview:
+    # writing to the existing file keeps its mode and owner
+    fpath.write_bytes(data.replace(PATH_OLD.encode() ,PATH_NEW.encode()))
+
+def convert(dirpa_root ,log ,preview):
+  """
+  Rename the settings file and edit the mentions. Returns 0 on success,
+  1 when the project is not as expected; then nothing is changed.
+  """
+  problem = problem_list(dirpa_root)
+  for p in problem:
+    log.line("error" ,p)
+    log.count["error"] += 1
+  if problem:
+    return 1
+
+  fpath_old = dirpa_root / SETTINGS_OLD
+  fpath_new = dirpa_root / SETTINGS_NEW
+  if fpath_old.is_file():
+    log.line("renamed" ,SETTINGS_OLD ,f"now {fpath_new.name}")
+    log.count["renamed"] += 1
+    if not preview:
+      os.rename(fpath_old ,fpath_new)
+
+  edit(dirpa_root / HARMONY_MK ,HARMONY_MK ,log ,preview)
+  edit(dirpa_root / MAKE_SCRIPT ,MAKE_SCRIPT ,log ,preview)
+  edit(fpath_new ,SETTINGS_NEW ,log ,preview
+       ,fpath_read=fpath_old if (preview and fpath_old.is_file()) else None)
+  return 0
+
+
+def print_help():
+  print(__doc__.strip())
+  return 0
+
+def CLI(argv=None):
+  if argv is None:
+    argv = sys.argv[1:]
+  if not argv or argv[0] in ("help" ,"-h" ,"--help"):
+    return print_help()
+
+  preview = argv[0] == "preview"
+  if preview:
+    argv = argv[1:]
+    if not argv:
+      print("Error: 'preview' needs a command after it.\n" ,file=sys.stderr)
+      print_help()
+      return 1
+
+  command ,rest = argv[0] ,argv[1:]
+  if command != "project":
+    print(f"Error: unknown command '{command}'.\n" ,file=sys.stderr)
+    print_help()
+    return 1
+  if rest:
+    print(f"Error: 'project' takes no arguments, given: {' '.join(rest)}" ,file=sys.stderr)
+    return 1
+  repo_home = os.environ.get("REPO_HOME")
+  if not repo_home:
+    print("Error: REPO_HOME is not set; run this from a role setup." ,file=sys.stderr)
+    return 1
+
+  dirpa_root = Path(repo_home).resolve()
+  print(f"makefile_to_project_mk {'preview ' if preview else ''}project   in {dirpa_root}")
+  log = Log(preview)
+  status = convert(dirpa_root ,log ,preview)
+  log.summary()
+  return status
+
+if __name__ == "__main__":
+  sys.exit(CLI())

@@ -1,0 +1,633 @@
+#!/usr/bin/env python3
+# -*- mode: python; coding: utf-8; python-indent-offset: 2; indent-tabs-mode: nil -*-
+
+"""
+project_rename
+
+Rename a project to its hyphenated name. Run it in the directory that holds
+the projects, such as ~/project. It renames the project in the directory
+named <old>, then follows the rename in every other project there that
+depends on it, through a link shared/project-dependency/<old>, and last
+renames the directory <old> to <new>.
+
+A project name is written with hyphens between its words wherever a hyphen
+is allowed. Where the name must be an identifier, in a namespace, a module, a
+C symbol or a command in a namespace, it is written with each hyphen made an
+underscore. For Man-In-Grey the identifier form is Man_In_Grey, for
+Account-Tree it is Account_Tree.
+
+What is changed:
+
+  - the Opus file, 0pus_<old>, becomes 0pus_<new>
+  - in shared/project-dependency, a link named <old> and <old>.init take the
+    hyphenated name, and the link is pointed at project/<new>/
+  - document file names take the hyphenated name, and references to them
+    are changed to match
+  - in the .html documents, outside <RT·code>, the name standing as a word
+    becomes the hyphenated name; inside <RT·code> it is code, as below
+  - in code, the old name becomes the identifier form in names, and in
+    comments and Python docstrings unless it is in a path, a unit or rule
+    file name or a reverse-domain name; so do the names of namespace
+    directories and the files in them
+  - in a code example in a document, the old name becomes the identifier
+    form unless it is in a path, a unit or rule file name or a reverse-domain
+    name
+  - "project-dependency/<old>" and "<old>.init" become the hyphenated name in
+    every file
+
+What is logged for editing by hand, with the line:
+
+  - in code, the name in a string, unless the string names a code file this
+    run renames, such as "$dir/<old>_admin", which is changed. A string is data: it can name a directory
+    on storage, a device, a file the program wrote and recognizes, or feed a
+    hash. Changing such a name changes what installed systems and existing
+    storage hold, and needs a migration this tool cannot judge. In code
+    other than Python, every line that is not a comment line counts as
+    possibly in a string.
+  - in a code example in a document, the name in a path, a unit or rule file
+    name, or a reverse-domain name
+  - in .html prose, the name joined to other characters, as in a file name
+  - in .org, .md and .txt files, which are notes and logs: a log records
+    what was, and is not to be rewritten
+
+The files acted on are the files git sees: those it tracks and those not yet
+added that .gitignore does not exclude. Products of the build, which are
+made again, are left alone. A project in the directory that mentions the
+name without depending on it is listed, not changed. The GitHub repository
+and the git remote are renamed by hand afterwards, and each role's setup is
+run again, since REPO_HOME and PROJECT come from the directory name.
+
+Checkpoint each project with git first, run preview, then review with git
+diff. Nothing is changed unless every rename, in every project, can be made.
+
+Usage: project_rename <command> <old> <new>
+       project_rename preview <command> <old> <new>
+
+  help | -h | --help     print this message (also printed when given no arguments)
+  project <old> <new>    rename the project in the directory <old> under the current
+                         directory, for example, in ~/project:
+                         project_rename project Man_In_Grey Man-In-Grey
+  preview <command> ...  print the log of what <command> would do, change nothing
+"""
+
+import sys ,os ,re ,io ,subprocess ,tokenize
+from pathlib import Path
+
+DOCUMENT_EXTENSION = {".html" ,".org" ,".md" ,".txt" ,".png" ,".jpg" ,".svg" ,".pdf"}
+NOTE_EXTENSION     = {".org" ,".md" ,".txt"}
+DEPENDENCY_DIR     = Path("shared/project-dependency")
+
+# elements of an .html document whose content is not prose
+HTML_CODE_ELEMENT  = re.compile(r"(<(RT·code|script|style)\b[^>]*>)(.*?)(</\2>)" ,re.S)
+
+# a character that joins a name to a larger token
+TOKEN_CHAR = r"[\w·/.\-]"
+
+
+class Log:
+  def __init__(self ,preview):
+    self.preview = preview
+    self.count = {"renamed": 0 ,"retargeted": 0 ,"edited": 0 ,"mention": 0 ,"by_hand": 0}
+
+  def line(self ,tag ,text ,note=""):
+    if self.preview:
+      tag = {"renamed": "would rename" ,"retargeted": "would retarget" ,"edited": "would edit"}.get(tag ,tag)
+    print(f"  {tag:<16}{text}" + (f"  ({note})" if note else ""))
+
+  def by_hand(self ,rel ,line_number ,line):
+    self.count["by_hand"] += 1
+    print(f"  {'edit by hand':<16}{rel}:{line_number}: {line.strip()}")
+
+  def summary(self):
+    print()
+    print("summary:")
+    print(f"  {self.count['renamed']:4d}  files and directories renamed")
+    print(f"  {self.count['retargeted']:4d}  links retargeted")
+    print(f"  {self.count['edited']:4d}  files edited, {self.count['mention']} mentions changed")
+    print(f"  {self.count['by_hand']:4d}  lines to edit by hand")
+    if self.preview:
+      print("preview only: nothing was changed.")
+
+
+class Name:
+  """
+  The forms of one project name. old is the name as written now, new the
+  hyphenated name, identifier the form used where a hyphen is not allowed.
+  prose_old is every old form that can stand in prose: the old name, and for
+  a name with underscores, its words separated by spaces.
+  """
+  def __init__(self ,old ,new):
+    self.old = old
+    self.new = new
+    self.identifier = new.replace("-" ,"_")
+    self.prose_old = [old] + ([old.replace("_" ," ")] if "_" in old else [])
+    # old base names of the code files this run renames, other than the bare
+    # old name, which is ambiguous: it is also the project's name in data
+    self.renamed_file = set()
+
+def is_renamed_file_reference(token ,name):
+  """
+  True when token, a word in a string, names a code file this run renames,
+  alone or as the last part of a path: "$dir/AccountTree_admin". Trailing
+  punctuation of a sentence is not part of the name.
+  """
+  last = token.rstrip(".,:;!?").rsplit("/" ,1)[-1]
+  return last in name.renamed_file
+
+
+#--------------------------------------------------------------------------------
+# finding the files
+
+def tracked_file_list(dirpa_root):
+  """
+  The files git sees, relative to the root, sorted: those it tracks and those
+  not yet added that .gitignore does not exclude, so a second run before
+  git add sees the files the first one renamed. git runs without a shell.
+  """
+  run = subprocess.run(["git" ,"-C" ,str(dirpa_root) ,"ls-files" ,"-z" ,"--cached" ,"--others" ,"--exclude-standard"]
+                       ,capture_output=True ,check=True)
+  rel_set = {Path(p) for p in run.stdout.decode("utf-8").split("\0") if p}
+  return sorted(rel for rel in rel_set if (dirpa_root / rel).exists() or (dirpa_root / rel).is_symlink())
+
+def is_document(rel):
+  return "document" in rel.parts[:-1] or rel.suffix in DOCUMENT_EXTENSION
+
+def is_note(rel):
+  return rel.suffix in NOTE_EXTENSION
+
+def is_text(fpath):
+  try:
+    data = fpath.read_bytes()
+    data.decode("utf-8")
+    return b"\0" not in data
+  except (UnicodeDecodeError ,OSError):
+    return False
+
+
+#--------------------------------------------------------------------------------
+# what each path becomes
+
+def renamed_component(component ,rel_parent ,is_file ,is_doc ,name):
+  """The new form of one path component, or the component unchanged."""
+  if name.old not in component:
+    return component
+  if rel_parent == Path(".") and component == f"0pus_{name.old}":
+    return f"0pus_{name.new}"
+  if rel_parent == DEPENDENCY_DIR:
+    return component.replace(name.old ,name.new)
+  if (is_file and is_doc) or "document" in rel_parent.parts:
+    return component.replace(name.old ,name.new)
+  return component.replace(name.old ,name.identifier)
+
+def rename_map(rel_list ,name):
+  """
+  Each path to rename, files and directories, mapped to its new path. A
+  directory is renamed when one of its components holds the old name.
+  """
+  mapping = {}
+  for rel in rel_list:
+    part_new = []
+    for i ,component in enumerate(rel.parts):
+      is_file = i == len(rel.parts) - 1
+      rel_parent = Path(*rel.parts[:i]) if i else Path(".")
+      part_new.append(renamed_component(component ,rel_parent ,is_file ,is_document(rel) ,name))
+    for i in range(1 ,len(rel.parts) + 1):
+      old_prefix = Path(*rel.parts[:i])
+      new_prefix = Path(*rel.parts[:i - 1] ,part_new[i - 1]) if i > 1 else Path(part_new[0])
+      if old_prefix.name != new_prefix.name:
+        mapping[old_prefix] = new_prefix
+  return mapping
+
+
+#--------------------------------------------------------------------------------
+# what each file's content becomes
+
+def is_system_token(token):
+  """A token naming a thing on an installed system or on storage."""
+  return ("/" in token or "@" in token
+          or re.search(r"\.(service|rules|socket|timer|target|conf|db|sqlite)\b" ,token) is not None
+          or re.match(r"(com|org|net)\." ,token) is not None)
+
+def token_around(text ,start ,end):
+  """The run of characters around text[start:end] up to whitespace, a quote or a bracket."""
+  stop = set(" \t\n\"'`()[]{},;<>=")
+  a = start
+  while a > 0 and text[a - 1] not in stop:
+    a -= 1
+  b = end
+  while b < len(text) and text[b] not in stop:
+    b += 1
+  return text[a:b]
+
+def line_number(text ,offset ,line_base):
+  """
+  The line of text[offset], counted in the whole file. No edit adds or
+  removes a newline, so the newlines before a segment, line_base, are the
+  same in the edited file as in the original.
+  """
+  return line_base + text.count("\n" ,0 ,offset) + 1
+
+def edit_exact(text ,pair_list):
+  """Replace each exact old string with its new one. Returns the text and the count."""
+  count = 0
+  for old ,new in pair_list:
+    count += text.count(old)
+    text = text.replace(old ,new)
+  return text ,count
+
+def edit_code_example(text ,name ,line_base ,hand ,frozen=frozenset()):
+  """
+  The old name in a code example in a document becomes the identifier form,
+  line by line. A line with the name in a system token is left whole and put
+  on hand, since the example's other mentions on it can name the same data.
+  line_base is the number of lines before text in the file.
+  """
+  if name.old == name.identifier:
+    return text ,0
+  out ,count ,number = [] ,0 ,line_base
+  for line in text.splitlines(keepends=True):
+    number += 1
+    if name.old in line:
+      match_list = list(re.finditer(re.escape(name.old) ,line))
+      if number in frozen or any(is_system_token(token_around(line ,m.start() ,m.end())) for m in match_list):
+        hand.append(number)
+      else:
+        count += len(match_list)
+        line = line.replace(name.old ,name.identifier)
+    out.append(line)
+  return "".join(out) ,count
+
+def replace_span(text ,span_list ,new):
+  """text with each (start ,end) span replaced by new, spans in order and apart."""
+  out ,last = [] ,0
+  for start ,end in span_list:
+    out.append(text[last:start]); out.append(new); last = end
+  out.append(text[last:])
+  return "".join(out)
+
+def is_python(rel ,text):
+  return rel.suffix == ".py" or (rel.suffix == "" and text.startswith("#!") and "python" in text.split("\n" ,1)[0])
+
+def edit_python(text ,name ,hand):
+  """
+  In Python the old name becomes the identifier form in names, comments and
+  docstrings. In any other string it is data, which can name a thing on a
+  system or on storage, so its line is put on hand. A file Python cannot
+  tokenize is all put on hand.
+  """
+  line_start = [0]
+  for line in text.splitlines(keepends=True):
+    line_start.append(line_start[-1] + len(line))
+  def offset(row ,col):
+    return line_start[row - 1] + col
+
+  string_type = {tokenize.STRING}
+  for kind in ("FSTRING_START" ,"FSTRING_MIDDLE" ,"FSTRING_END"):
+    if hasattr(tokenize ,kind):
+      string_type.add(getattr(tokenize ,kind))
+  ignore = {tokenize.NL ,tokenize.COMMENT ,tokenize.ENCODING}
+
+  span_list = []
+  try:
+    previous = None
+    for token in tokenize.generate_tokens(io.StringIO(text).readline):
+      if name.old in token.string:
+        start = offset(*token.start)
+        is_docstring = token.type == tokenize.STRING and previous in (None ,tokenize.NEWLINE ,tokenize.INDENT ,tokenize.DEDENT)
+        if token.type in string_type and not is_docstring:
+          # a string is changed whole or not at all: part of a string that is
+          # data changed would make a value no installed system has
+          match_list = list(re.finditer(re.escape(name.old) ,token.string))
+          if all(is_renamed_file_reference(token_around(token.string ,m.start() ,m.end()) ,name) for m in match_list):
+            span_list.extend((start + m.start() ,start + m.end()) for m in match_list)
+          else:
+            hand.append(line_number(text ,start + match_list[0].start() ,0))
+          continue
+        for m in re.finditer(re.escape(name.old) ,token.string):
+          at = start + m.start()
+          if token.type == tokenize.NAME:
+            span_list.append((at ,at + len(name.old)))
+          elif token.type == tokenize.COMMENT or is_docstring:
+            # prose about the code: a system name in it stays as the code has it
+            if is_system_token(token_around(token.string ,m.start() ,m.end())):
+              hand.append(line_number(text ,at ,0))
+            else:
+              span_list.append((at ,at + len(name.old)))
+
+      if token.type not in ignore:
+        previous = token.type
+  except (tokenize.TokenError ,SyntaxError ,IndentationError):
+    hand.extend(line_number(text ,m.start() ,0) for m in re.finditer(re.escape(name.old) ,text))
+    return text ,0
+  span_list.sort()
+  return replace_span(text ,span_list ,name.identifier) ,len(span_list)
+
+COMMENT_LEAD = ("#" ,"--" ,"//" ,"/*" ,"*")
+
+def edit_other_code(text ,name ,hand):
+  """
+  In code other than Python, the old name becomes the identifier form on a
+  comment line. Anywhere else it can be in a quoted string, which is data, so
+  its line is put on hand.
+  """
+  out ,count ,number = [] ,0 ,0
+  for line in text.splitlines(keepends=True):
+    number += 1
+    if name.old in line:
+      if line.lstrip().startswith(COMMENT_LEAD) and not line.startswith("#!"):
+        # a system name in a comment stays as the code has it
+        edited ,n = edit_code_example(line ,name ,number - 1 ,hand)
+        count += n
+        line = edited
+      else:
+        # changed only when every mention on the line refers to a renamed
+        # file; otherwise the line can hold data, and is left whole
+        match_list = list(re.finditer(re.escape(name.old) ,line))
+        if all(is_renamed_file_reference(token_around(line ,m.start() ,m.end()) ,name) for m in match_list):
+          count += len(match_list)
+          line = line.replace(name.old ,name.identifier)
+        else:
+          hand.append(number)
+    out.append(line)
+  return "".join(out) ,count
+
+def edit_code(rel ,text ,name ,hand):
+  """The old name in a code file, by the rules of its language."""
+  if name.old == name.identifier:
+    return text ,0
+  if is_python(rel ,text):
+    return edit_python(text ,name ,hand)
+  return edit_other_code(text ,name ,hand)
+
+def edit_prose(text ,name ,line_base ,hand ,frozen=frozenset()):
+  """
+  The old name standing as a word in prose becomes the hyphenated name. Joined
+  to other characters it is part of some token, a file name or code, and is
+  logged. A possessive or the end of a sentence does not join it.
+  """
+  count = 0
+  for old in name.prose_old:
+    pattern = re.compile(r"(?<!" + TOKEN_CHAR + r")" + re.escape(old) + r"(" + TOKEN_CHAR + r"?)")
+    out ,last = [] ,0
+    for match in pattern.finditer(text):
+      following = match.group(1)
+      after = text[match.end():match.end() + 1]
+      joined = following and not (following in ".-" and not re.match(r"\w" ,after))
+      out.append(text[last:match.start()])
+      number = line_number(text ,match.start() ,line_base)
+      if joined or number in frozen:
+        hand.append(number)
+        out.append(match.group())
+      else:
+        out.append(name.new + following)
+        count += 1
+      last = match.end()
+    out.append(text[last:])
+    text = "".join(out)
+  return text ,count
+
+def edit_html_pass(text ,name ,hand ,frozen):
+  out ,count ,last = [] ,0 ,0
+  for match in HTML_CODE_ELEMENT.finditer(text):
+    prose ,n = edit_prose(text[last:match.start()] ,name ,text.count("\n" ,0 ,last) ,hand ,frozen)
+    out.append(prose); count += n
+    if match.group(2) == "RT·code":
+      code ,n = edit_code_example(match.group(3) ,name ,text.count("\n" ,0 ,match.start(3)) ,hand ,frozen)
+      out.append(match.group(1) + code + match.group(4)); count += n
+    else:
+      out.append(match.group())
+    last = match.end()
+  prose ,n = edit_prose(text[last:] ,name ,text.count("\n" ,0 ,last) ,hand ,frozen)
+  out.append(prose); count += n
+  return "".join(out) ,count
+
+def edit_html(text ,name ,hand):
+  """
+  Prose rules outside <RT·code>, <script> and <style>; code example rules
+  inside <RT·code>. A line with any mention left for hand editing is left
+  whole, prose and code alike, so a line never says the old name in one place
+  and the new one in another: a first pass finds those lines.
+  """
+  frozen = []
+  edit_html_pass(text ,name ,frozen ,frozenset())
+  return edit_html_pass(text ,name ,hand ,frozenset(frozen))
+
+def edited_content(rel ,text ,name ,document_pair_list):
+  """
+  The new content of one file, the number of mentions changed, and the
+  numbers of the lines to edit by hand.
+  """
+  hand = []
+  text ,count = edit_exact(text ,[(f"project-dependency/{name.old}" ,f"project-dependency/{name.new}")
+                                  ,(f"{name.old}.init" ,f"{name.new}.init")])
+  if rel.suffix == ".html":
+    text ,n = edit_exact(text ,document_pair_list); count += n
+    text ,n = edit_html(text ,name ,hand); count += n
+  elif is_note(rel):
+    for old in name.prose_old:
+      hand.extend(line_number(text ,m.start() ,0) for m in re.finditer(re.escape(old) ,text))
+  else:
+    for old_doc ,_ in document_pair_list:
+      hand.extend(line_number(text ,m.start() ,0) for m in re.finditer(re.escape(old_doc) ,text))
+    text ,n = edit_code(rel ,text ,name ,hand); count += n
+  return text ,count ,sorted(set(hand))
+
+
+#--------------------------------------------------------------------------------
+# the work
+
+def dependency_link(dirpa_root ,name):
+  """The dependency link named for the old name, if there is one: (path, new target)."""
+  link = dirpa_root / DEPENDENCY_DIR / name.old
+  if not link.is_symlink():
+    return None
+  target = os.readlink(link)
+  prefix = f"project/{name.old}"
+  if target == prefix or target.startswith(prefix + "/"):
+    return link ,f"project/{name.new}" + target[len(prefix):]
+  return link ,None
+
+def problem_list(dirpa_root ,mapping):
+  """The renames that cannot be made, checked before anything is changed."""
+  problem = []
+  for old ,new in mapping.items():
+    beside = dirpa_root / old.parent / new.name
+    if beside.exists() or beside.is_symlink():
+      problem.append(f"{old} would become {new.name}, which exists beside it")
+  return problem
+
+def plan(dirpa_root ,name):
+  """The files of one project, its renames, and its dependency link if any."""
+  rel_list = tracked_file_list(dirpa_root)
+  mapping = rename_map(rel_list ,name)
+  link = dependency_link(dirpa_root ,name)
+  if link:
+    mapping[DEPENDENCY_DIR / name.old] = DEPENDENCY_DIR / name.new
+  return rel_list ,mapping ,link
+
+def rename(dirpa_root ,name ,log ,preview):
+  """Make every change for one name in one project, already checked by plan and problem_list."""
+  rel_list ,mapping ,link = plan(dirpa_root ,name)
+
+  for old ,new in mapping.items():
+    if not is_document(old) and old.name != name.old and name.old in old.name and (dirpa_root / old).is_file():
+      name.renamed_file.add(old.name)
+
+  # references to renamed documents, by file name
+  document_pair_list = sorted({(old.name ,new.name) for old ,new in mapping.items()
+                               if is_document(old) and old.suffix})
+
+  # content first, while every file is still at its old path
+  for rel in rel_list:
+    fpath = dirpa_root / rel
+    if fpath.is_symlink() or not fpath.is_file() or not is_text(fpath):
+      continue
+    text = fpath.read_text(encoding="utf-8")
+    new_text ,count ,hand = edited_content(rel ,text ,name ,document_pair_list)
+    if count:
+      log.line("edited" ,rel ,f"{count} mention" + ("" if count == 1 else "s"))
+      log.count["edited"] += 1
+      log.count["mention"] += count
+      if not preview:
+        # writing to the existing file keeps its mode
+        fpath.write_bytes(new_text.encode("utf-8"))
+    original_line = text.split("\n")
+    for number in hand:
+      log.by_hand(rel ,number ,original_line[number - 1])
+
+  if link:
+    link_path ,target_new = link
+    if target_new is None:
+      log.line("edit by hand" ,DEPENDENCY_DIR / name.old ,f"points at {os.readlink(link_path)}, not project/{name.old}")
+      log.count["by_hand"] += 1
+    else:
+      log.line("retargeted" ,DEPENDENCY_DIR / name.old ,f"now {target_new}")
+      log.count["retargeted"] += 1
+      if not preview:
+        os.remove(link_path)
+        os.symlink(target_new ,link_path)
+
+  # deepest first, so a directory is renamed after the paths inside it
+  for old in sorted(mapping ,key=lambda p: (-len(p.parts) ,str(p))):
+    new = mapping[old]
+    log.line("renamed" ,old ,f"now {new.name}")
+    log.count["renamed"] += 1
+    if not preview:
+      os.rename(dirpa_root / old ,dirpa_root / old.parent / new.name)
+  return 0
+
+
+#--------------------------------------------------------------------------------
+# the command line
+
+def print_help():
+  print(__doc__.strip())
+  return 0
+
+def is_project(dirpa):
+  return dirpa.is_dir() and (dirpa / ".git").exists()
+
+def mention_count(dirpa_root ,old):
+  """
+  The number of files git tracks in a project that mention old, in name or
+  content. git grep does the search: it skips binary files and runs in
+  parallel, so a large project, a CPython checkout for one, takes seconds
+  where reading every file from Python takes minutes. git runs without a
+  shell; status 1 from git grep means no file matched.
+  """
+  name_run = subprocess.run(["git" ,"-C" ,str(dirpa_root) ,"ls-files" ,"-z"] ,capture_output=True)
+  named = {p for p in name_run.stdout.decode("utf-8" ,"replace").split("\0") if p and old in p}
+  grep_run = subprocess.run(["git" ,"-C" ,str(dirpa_root) ,"grep" ,"-z" ,"-l" ,"-I" ,"-F" ,"-e" ,old]
+                            ,capture_output=True)
+  content = {p for p in grep_run.stdout.decode("utf-8" ,"replace").split("\0") if p}
+  return len(named | content)
+
+def rename_all(dirpa_cwd ,old ,new ,preview):
+  """
+  Rename the project in dirpa_cwd/old, follow the rename in each project in
+  dirpa_cwd that depends on it, then rename the directory. Returns 0, or 1
+  when a check failed and nothing was changed.
+  """
+  dirpa_project = dirpa_cwd / old
+  if not is_project(dirpa_project):
+    print(f"Error: no project {dirpa_project}: no git working tree there. Run this in the directory that holds the projects." ,file=sys.stderr)
+    return 1
+  if (dirpa_cwd / new).exists() or (dirpa_cwd / new).is_symlink():
+    print(f"Error: {dirpa_cwd / new} exists already." ,file=sys.stderr)
+    return 1
+
+  dependent_list ,other_list = [] ,[]
+  for dirpa in sorted(p for p in dirpa_cwd.iterdir() if p != dirpa_project and is_project(p)):
+    if (dirpa / DEPENDENCY_DIR / old).is_symlink() or (dirpa / DEPENDENCY_DIR / f"{old}.init").exists():
+      dependent_list.append(dirpa)
+    else:
+      other_list.append(dirpa)
+
+  # every project is checked before any is changed
+  problem = []
+  for dirpa in [dirpa_project] + dependent_list:
+    _ ,mapping ,_ = plan(dirpa ,Name(old ,new))
+    problem.extend(f"{dirpa.name}: {p}" for p in problem_list(dirpa ,mapping))
+  for p in problem:
+    print(f"  {'error':<16}{p}")
+  if problem:
+    return 1
+
+  print(f"project_rename {'preview ' if preview else ''}project {old} {new}   in {dirpa_cwd}")
+  print(f"  {'':<16}hyphenated name {new}, identifier form {new.replace('-' ,'_')}")
+  log = Log(preview)
+  for dirpa in [dirpa_project] + dependent_list:
+    print()
+    print(f"{dirpa.name}" + ("" if dirpa == dirpa_project else f"   depends on {old}"))
+    rename(dirpa ,Name(old ,new) ,log ,preview)
+
+  print()
+  for dirpa in other_list:
+    n = mention_count(dirpa ,old)
+    if n:
+      print(f"  {'not changed':<16}{dirpa.name}: " + ("1 file mentions" if n == 1 else f"{n} files mention") + f" {old}, without depending on it")
+  log.line("renamed" ,old ,f"now {new}, the project directory")
+  log.count["renamed"] += 1
+  if not preview:
+    os.rename(dirpa_project ,dirpa_cwd / new)
+  log.summary()
+  if not preview:
+    print(f"Run each role's setup of {new} again: REPO_HOME and PROJECT come from the directory name.")
+  return 0
+
+def CLI(argv=None):
+  if argv is None:
+    argv = sys.argv[1:]
+  if not argv or argv[0] in ("help" ,"-h" ,"--help"):
+    return print_help()
+
+  preview = argv[0] == "preview"
+  if preview:
+    argv = argv[1:]
+    if not argv:
+      print("Error: 'preview' needs a command after it.\n" ,file=sys.stderr)
+      print_help()
+      return 1
+
+  command ,rest = argv[0] ,argv[1:]
+  if command != "project":
+    print(f"Error: unknown command '{command}'.\n" ,file=sys.stderr)
+    print_help()
+    return 1
+  if len(rest) != 2:
+    print("Error: 'project' takes two arguments, the old name and the new name." ,file=sys.stderr)
+    return 1
+  old ,new = rest
+  if not re.fullmatch(r"[A-Za-z0-9]+(-[A-Za-z0-9]+)*" ,new):
+    print(f"Error: '{new}' is not a hyphenated name: letters and digits, words joined by '-'." ,file=sys.stderr)
+    return 1
+  if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*" ,old) or old == new:
+    print(f"Error: '{old}' is not a name to rename to '{new}'." ,file=sys.stderr)
+    return 1
+  if new in old or (old in new.replace("-" ,"_") and old != new.replace("-" ,"_")):
+    print(f"Error: '{old}' and '{new}' overlap, so a second run could rename again." ,file=sys.stderr)
+    return 1
+  return rename_all(Path.cwd() ,old ,new ,preview)
+
+if __name__ == "__main__":
+  sys.exit(CLI())
